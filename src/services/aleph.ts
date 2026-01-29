@@ -19,7 +19,7 @@ export class WrongChainError extends Error {
 /**
  * Provider interface for wallet interactions
  */
-interface WalletProvider {
+export interface WalletProvider {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
 }
 
