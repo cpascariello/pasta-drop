@@ -10,13 +10,23 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aleph-sdk/client": "^1.4.5",
+    "@aleph-sdk/ethereum": "^1.5.0",
+    "@aleph-sdk/evm": "^1.6.2",
+    "@aleph-sdk/solana": "^1.6.2",
     "@radix-ui/react-slot": "^1.2.4",
+    "@tanstack/react-query": "^5.90.20",
+    "@web3modal/wagmi": "^5.1.11",
+    "buffer": "^6.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "ethers5": "npm:ethers@^5.8.0",
     "lucide-react": "^0.563.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "viem": "^2.45.0",
+    "wagmi": "^3.4.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
