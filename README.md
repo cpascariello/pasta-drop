@@ -1,73 +1,61 @@
-# React + TypeScript + Vite
+# Pasta Drop
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Your pasta, al dente forever.
 
-Currently, two official plugins are available:
+Decentralized text sharing powered by Aleph Cloud. No account, no server, no expiration.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## React Compiler
+- **Permanent storage** — Your pasta is stored on the Aleph network forever
+- **No backend** — The app is entirely client-side
+- **Wallet auth** — Sign with your Ethereum wallet to drop pasta
+- **Free reads** — Anyone can view pasta without connecting a wallet
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Quick Start
 
-## Expanding the ESLint configuration
+```bash
+# Install dependencies
+npm install
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start dev server
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Configuration
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Before deploying, update the WalletConnect project ID in `src/config/wagmi.ts`:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```ts
+export const projectId = 'YOUR_WALLETCONNECT_PROJECT_ID';
 ```
+
+Get a project ID at [cloud.walletconnect.com](https://cloud.walletconnect.com).
+
+## How It Works
+
+1. **Drop** — Enter text, connect your Ethereum wallet, click "Al dente"
+2. **Store** — Your pasta is stored on Aleph Cloud as an immutable Store object
+3. **Share** — Click "Mangia!" to copy the permanent link
+4. **Serve** — Anyone can open the link — no wallet needed. Buon appetito!
+
+## Microcopy
+
+| Action | Text |
+|--------|------|
+| Create button | "Al dente" |
+| Loading | "Al dente..." |
+| Success | "A tavola!" |
+| Copy link | "Mangia!" |
+| Copied | "Perfetto!" |
+| New paste | "Cook your own" |
+
+## Tech Stack
+
+- [Vite](https://vitejs.dev/) + [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- [ShadCN/ui](https://ui.shadcn.com/) + [Tailwind CSS](https://tailwindcss.com/)
+- [Aleph SDK](https://docs.aleph.im/) — Decentralized storage
+- [WalletConnect](https://walletconnect.com/) + [wagmi](https://wagmi.sh/) — Wallet connection
+
+## License
+
+MIT
