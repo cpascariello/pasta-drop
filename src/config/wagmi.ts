@@ -30,5 +30,5 @@ createWeb3Modal({
   wagmiConfig,
   projectId,
   enableAnalytics: false,
-  themeMode: 'dark',
+  themeMode: 'light',
 });

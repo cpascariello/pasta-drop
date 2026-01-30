@@ -47,3 +47,9 @@ Each entry includes:
 **Decision:** Require Ethereum mainnet only (chain ID 0x1)
 **Rationale:** Aleph network anchors data to Ethereum mainnet for security. Allowing testnets would create pastes with different trust guarantees. Users should be on mainnet for production use.
 **Alternatives considered:** Support multiple chains, allow testnets for development
+
+## Decision #6 - 2026-01-30
+**Context:** Updating the app's visual theme
+**Decision:** Switch to oklch-based color system with custom shadcn/ui v4 theme, using light mode as default
+**Rationale:** oklch provides perceptually uniform colors. New palette features pink/red primary, teal secondary, warm accents, red-tinted hard-edge shadows, and larger border radius (1.25rem). Light mode set as default to showcase the new warm palette. Uses `@theme inline` directive matching shadcn/ui v4 convention.
+**Alternatives considered:** Keep HSL-based theme with dark mode default
