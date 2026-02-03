@@ -44,8 +44,6 @@ export async function createPaste(
   provider: WalletProvider,
   text: string
 ): Promise<string> {
-  console.log('[Pasta Drop] createPaste v2 — bypassing SDK, posting to', ALEPH_API_SERVER);
-
   // Step 1: Verify user is on mainnet
   const chainId = await provider.request({ method: 'eth_chainId' }) as string;
   if (chainId !== ETH_MAINNET_CHAIN_ID) {
@@ -148,8 +146,6 @@ export async function createPaste(
   }
 
   const result = await response.json();
-  console.log('[Pasta Drop] API response:', result);
-
   // The gateway serves raw files at /storage/raw/{fileHash}
   // result.hash is the file content hash the API confirms
   return result.hash ?? fileHash;
