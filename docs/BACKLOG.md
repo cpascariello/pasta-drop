@@ -25,40 +25,20 @@ Ideas and scope creep captured for later consideration.
 **Description:** Add Solana wallet connection alongside Ethereum. The Aleph SDK already supports `@aleph-sdk/solana`.
 **Priority:** Low
 
-### 2026-02-03 - Textarea Focus Animation
-**Source:** Brainstorming spaghetti animations
-**Description:** Subtle animation when textarea receives focus — fork-twirl emoji, gentle scale-up, or border glow.
-**Priority:** Low
-
-### 2026-02-03 - Success Celebration Burst
-**Source:** Brainstorming spaghetti animations
-**Description:** Brief emoji confetti burst from the button when a paste is created ("A tavola!" moment). One-shot, not the background floaters.
-**Priority:** Medium
-
-### 2026-02-03 - Copy Button Feedback Animation
-**Source:** Brainstorming spaghetti animations
-**Description:** Bounce or shimmer on the "Mangia!" button when clicked, instead of just swapping text to "Perfetto!".
-**Priority:** Low
-
 ### 2026-02-03 - Slow Gradient Background Shift
 **Source:** Brainstorming spaghetti animations
 **Description:** Very slow, barely perceptible background color cycling. Gives the page a living feel.
 **Priority:** Low
 
-### 2026-02-03 - Card Entrance Animation
-**Source:** Brainstorming spaghetti animations
-**Description:** Main card fades/slides in on load instead of appearing instantly.
-**Priority:** Low
-
 ### 2026-02-03 - Elaborate Aleph-Focused Inline Comments
 **Source:** Cookbook documentation review
-**Description:** Add detailed inline comments focused on teaching Aleph Cloud integration. Key areas: src/services/aleph.ts (expand Store vs POST explanation, link to Aleph SDK docs), src/config/aleph.ts (link to docs for channel/gateway concepts), src/components/Editor.tsx (explain wallet-to-Aleph handoff). Add a "How Aleph Storage Works" section to the README. Other tools (wagmi, React, physics) don't need additional commentary.
+**Description:** Add detailed inline comments focused on teaching Aleph Cloud integration. Key areas: src/services/aleph-write.ts (expand Store vs POST explanation, link to Aleph SDK docs), src/config/aleph.ts (link to docs for channel/gateway concepts), src/components/Editor.tsx (explain wallet-to-Aleph handoff). Add a "How Aleph Storage Works" section to the README. Other tools (wagmi, React, physics) don't need additional commentary.
 **Priority:** Medium
 
-### 2026-01-29 - Code Splitting for Web3 Libraries
-**Source:** Build warnings
-**Description:** Large chunk sizes from web3 libraries (3.6MB main bundle). Implement dynamic imports and manual chunks to improve load time.
-**Priority:** Medium
+### 2026-02-03 - Mobile Touch Repulsion for Floating Emojis
+**Source:** Code review feedback
+**Description:** Add `touchmove` handler to FloatingEmojis so mobile users can interact with the repulsion effect (currently desktop-only via mousemove).
+**Priority:** Low
 
 ---
 
@@ -75,5 +55,20 @@ Dropped — low value for the effort. Single pasta personality works fine.
 
 ### 2026-02-03 - Floating Title Animation ✗
 Dropped — title already has Erica One font + tilt. Adding motion would feel busy.
+
+### 2026-02-03 - Textarea Focus Animation ✓
+Completed in performance + polish pass. Subtle glow + scale(1.005) on focus via CSS transition.
+
+### 2026-02-03 - Success Celebration Burst ✓
+Completed in performance + polish pass. Portal-based emoji confetti burst from button on paste creation.
+
+### 2026-02-03 - Copy Button Feedback Animation ✓
+Completed in performance + polish pass. Squish-overshoot-settle bounce on Mangia! click via CSS keyframes.
+
+### 2026-02-03 - Card Entrance Animation ✓
+Completed in performance + polish pass. Fade + slide-up (400ms expo-out) on mount.
+
+### 2026-02-03 - Code Splitting for Web3 Libraries ✓
+Completed in performance + polish pass. Split aleph.ts into read/write, manual chunks in Vite. Main chunk: 3,608 KB → 224 KB.
 
 </details>

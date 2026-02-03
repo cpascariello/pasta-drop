@@ -71,3 +71,15 @@ Each entry includes:
 **Decision:** Erica One for display text (title, card headers, submit button), Lato for body/UI text
 **Rationale:** Erica One is rounded and playful, matching the pasta theme and tilted layout. Lato is clean and neutral, letting the display font be the personality without competing. Both loaded from Google Fonts.
 **Alternatives considered:** Ultra (too conventional/newspaper-like), Inter (default, no character)
+
+## Decision #10 - 2026-02-03
+**Context:** Code splitting strategy for 3.6MB monolithic bundle
+**Decision:** Split `aleph.ts` into read/write modules, dynamic `import()` for `createPaste`, manual chunks in Vite config (vendor-web3, vendor-aleph, vendor-ui)
+**Rationale:** `fetchPaste` uses plain `fetch()` with zero heavy deps — it should not force loading Aleph SDK + ethers5 on the Viewer path. Manual chunks separate vendor libraries for independent caching. Main chunk went from 3,608 KB → 224 KB.
+**Alternatives considered:** Lazy-loading entire Editor/Viewer components (rejected — wagmi hooks needed at App level), single dynamic import for all of aleph.ts (rejected — fetchPaste is too lightweight to bundle with write deps)
+
+## Decision #11 - 2026-02-03
+**Context:** UI micro-animation approach for card entrance, textarea focus, copy button bounce, and celebration burst
+**Decision:** CSS keyframes/transitions for deterministic UI feedback, imperative DOM + portal for the celebration burst particle effect
+**Rationale:** Animation responsibilities are stratified by complexity: CSS keyframes for one-shot feedback (card entrance, button bounce), CSS transitions for state-driven effects (textarea focus glow), imperative DOM for transient particle effects (burst). The burst uses `createPortal` to render above everything and self-cleans on completion. All animations respect `prefers-reduced-motion`. Timing vocabulary: 200ms micro-interactions, 350-400ms UI feedback, 700-800ms spectacle.
+**Alternatives considered:** Framer Motion (too heavy for these effects), React state-driven particles (unnecessary reconciliation overhead for 10 transient elements)
