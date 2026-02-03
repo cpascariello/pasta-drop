@@ -32,6 +32,11 @@ export function Editor({ onPasteCreated }: EditorProps) {
 
   const clearBurst = useCallback(() => setBurst(null), []);
 
+  // Wallet-to-Aleph handoff:
+  // 1. wagmi's connector.getProvider() returns the raw EIP-1193 provider
+  // 2. Dynamic import() loads aleph-write.ts only when needed (code splitting)
+  // 3. createPaste() wraps the provider for Aleph, signs, and uploads
+  // 4. On success, we get back a content hash for the viewer URL
   const handleCreate = async () => {
     if (!text.trim()) {
       setError("Can't serve an empty plate.");
@@ -48,7 +53,10 @@ export function Editor({ onPasteCreated }: EditorProps) {
     setStatus('Al dente...');
 
     try {
+      // Get the raw EIP-1193 provider from the connected wallet (MetaMask, etc.)
       const provider = await connector.getProvider() as WalletProvider;
+      // Dynamic import keeps Aleph SDK + ethers5 out of the initial bundle.
+      // Only loaded when the user actually creates a paste.
       const { createPaste, WrongChainError } = await import('@/services/aleph-write');
       try {
         const hash = await createPaste(provider, text);
