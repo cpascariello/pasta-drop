@@ -165,6 +165,29 @@
   --shadow-2xl: 1px 3px 0px 0px oklch(0.3885 0.0395 241.9310 / 2.50);
 }
 
+@keyframes pasta-spin {
+  0% { transform: rotate(0deg); }
+  40% { transform: rotate(200deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.pasta-spin {
+  display: inline-block;
+  animation: pasta-spin 1400ms cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.pasta-spin-fast {
+  display: inline-block;
+  animation: pasta-spin 800ms cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pasta-spin,
+  .pasta-spin-fast {
+    animation: none;
+  }
+}
+
 * {
   border-color: var(--color-border);
 }

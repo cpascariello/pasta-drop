@@ -135,9 +135,11 @@ npm run lint     # Run ESLint
 |------|---------|
 | `src/components/Editor.tsx` | Paste creation UI with wallet connection |
 | `src/components/Viewer.tsx` | Paste viewing UI with copy link |
+| `src/components/FloatingEmojis.tsx` | Ambient floating spaghetti background |
 | `src/services/aleph.ts` | `createPaste()` and `fetchPaste()` |
 | `src/config/wagmi.ts` | WalletConnect configuration |
 | `src/config/aleph.ts` | Aleph constants |
+| `src/config/floatingEmojis.ts` | Floating emoji tuning (counts, opacity, sizes, speed) |
 
 ### URL Structure
 

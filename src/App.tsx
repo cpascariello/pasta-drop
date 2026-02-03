@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Editor } from '@/components/Editor';
 import { Viewer } from '@/components/Viewer';
+import { FloatingEmojis } from '@/components/FloatingEmojis';
 
 function App() {
   const [hash, setHash] = useState<string | null>(null);
@@ -30,15 +31,16 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <header className="mb-8 text-center">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative">
+      <FloatingEmojis />
+      <header className="mb-8 text-center relative z-10">
         <h1 className="text-3xl font-bold mb-2">Pasta Drop</h1>
         <p className="text-muted-foreground">
           Your pasta, al dente forever.
         </p>
       </header>
 
-      <main>
+      <main className="relative z-10">
         {hash ? (
           <Viewer hash={hash} onNewPaste={handleNewPaste} />
         ) : (
@@ -46,7 +48,7 @@ function App() {
         )}
       </main>
 
-      <footer className="mt-8 text-sm text-muted-foreground">
+      <footer className="mt-8 text-sm text-muted-foreground relative z-10">
         Powered by{' '}
         <a
           href="https://aleph.im"

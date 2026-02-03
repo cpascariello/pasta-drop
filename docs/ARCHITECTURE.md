@@ -21,10 +21,12 @@ src/
 ├── components/
 │   ├── ui/              # ShadCN components (Button, Card, Textarea)
 │   ├── Editor.tsx       # Paste creation view
-│   └── Viewer.tsx       # Paste viewing view
+│   ├── Viewer.tsx       # Paste viewing view
+│   └── FloatingEmojis.tsx # Ambient floating spaghetti background
 ├── config/
 │   ├── aleph.ts         # Aleph constants (channel, gateway, chain ID)
-│   └── wagmi.ts         # WalletConnect/wagmi configuration
+│   ├── wagmi.ts         # WalletConnect/wagmi configuration
+│   └── floatingEmojis.ts # Floating emoji tuning (counts, opacity, sizes, speed)
 ├── services/
 │   └── aleph.ts         # createPaste(), fetchPaste() functions
 ├── lib/
@@ -58,6 +60,13 @@ src/
 **Approach:** Cast wagmi provider to `WalletProvider` interface, wrap with `ethers5.providers.Web3Provider`, then wrap with `JsonRPCWallet` for Aleph.
 **Key files:** `src/services/aleph.ts`, `src/components/Editor.tsx`
 **Notes:** Requires `ethers5` alias in package.json to avoid conflicts with newer ethers versions.
+
+### Floating Emoji Animation
+**Date:** 2026-02-03
+**Context:** Add personality to the single-component UI with ambient background animation
+**Approach:** RAF-driven physics simulation with direct DOM mutation (bypasses React reconciliation). Emojis drift with sinusoidal modulation, wrap at viewport edges, and respond to mouse repulsion with inverse-square falloff. Button emoji uses CSS keyframes with multi-stop rotation.
+**Key files:** `src/components/FloatingEmojis.tsx`, `src/config/floatingEmojis.ts`, `src/index.css`
+**Notes:** All positions stored in refs, no React re-renders from animation. Respects `prefers-reduced-motion`. Pauses RAF when tab is hidden. Config file allows tuning counts, opacity, sizes, and speed without touching component code.
 
 ### Tailwind v4 Theme
 **Date:** 2026-01-29

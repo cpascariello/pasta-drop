@@ -101,6 +101,8 @@ export function Editor({ onPasteCreated }: EditorProps) {
             disabled={isLoading || !text.trim()}
             className="w-full"
           >
+            <span className={isLoading ? 'pasta-spin-fast' : 'pasta-spin'}>🍝</span>
+            {' '}
             {isLoading ? status || 'Al dente...' : 'Al dente'}
           </Button>
         ) : (

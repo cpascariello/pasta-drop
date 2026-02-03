@@ -53,3 +53,15 @@ Each entry includes:
 **Decision:** Switch to oklch-based color system with custom shadcn/ui v4 theme, using light mode as default
 **Rationale:** oklch provides perceptually uniform colors. New palette features pink/red primary, teal secondary, warm accents, red-tinted hard-edge shadows, and larger border radius (1.25rem). Light mode set as default to showcase the new warm palette. Uses `@theme inline` directive matching shadcn/ui v4 convention.
 **Alternatives considered:** Keep HSL-based theme with dark mode default
+
+## Decision #7 - 2026-02-03
+**Context:** Adding ambient background animation to the single-component UI
+**Decision:** Floating spaghetti emojis with lava-lamp drift + edge wrapping (not bouncing), plus spinning emoji on the submit button
+**Rationale:** Edge wrapping feels more ambient/lava-lamp. Bouncing reads as DVD screensaver. Mouse repulsion with inverse-square falloff adds interactive discovery. Button spin uses multi-stop keyframes to avoid ease-in-out stalling at 0/360 seam.
+**Alternatives considered:** Spaghetti rain (constant falling), static scattered emojis with pulse, edge bouncing
+
+## Decision #8 - 2026-02-03
+**Context:** Animation implementation approach
+**Decision:** RAF loop with direct DOM mutation via refs, no React state for positions
+**Rationale:** Using useState for 25 emoji positions at 60fps would cause 60 React reconciliation cycles/sec. Direct DOM mutation bypasses React entirely for zero re-render overhead. Physics constants extracted to config file for easy tuning.
+**Alternatives considered:** React state with useMemo, CSS-only animation, Framer Motion
