@@ -9,6 +9,11 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    headers: {
+      'Cache-Control': 'no-store',
+    },
+  },
   optimizeDeps: {
     force: true,
   },

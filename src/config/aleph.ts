@@ -24,3 +24,9 @@ export const ALEPH_GATEWAY = 'https://api2.aleph.im/api/v0';
  * api2 accepts them.
  */
 export const ALEPH_API_SERVER = 'https://api2.aleph.im';
+
+/**
+ * ALEPH ERC-20 token contract on Ethereum mainnet.
+ * Needed to check balance before store operations (3 MB per ALEPH held).
+ */
+export const ALEPH_TOKEN_ADDRESS = '0x27702a26126e0b3702af63ee09ac4d1a084ef628';

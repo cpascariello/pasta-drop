@@ -10,7 +10,7 @@
 import { ETHAccount } from '@aleph-sdk/ethereum';
 import { JsonRPCWallet } from '@aleph-sdk/evm';
 import { providers } from 'ethers5';
-import { ALEPH_API_SERVER, ALEPH_CHANNEL, ETH_MAINNET_CHAIN_ID } from '../config/aleph';
+import { ALEPH_API_SERVER, ALEPH_CHANNEL, ALEPH_TOKEN_ADDRESS, ETH_MAINNET_CHAIN_ID } from '../config/aleph';
 
 /**
  * Error thrown when user is on wrong chain
@@ -54,10 +54,30 @@ export async function createPaste(
     throw new WrongChainError();
   }
 
-  // Step 2: Wrap provider with ethers5
+  // Step 2: Check ALEPH token balance (need tokens to store data — 3 MB per ALEPH held)
+  const accounts = await provider.request({ method: 'eth_accounts' }) as string[];
+  const sender = accounts[0];
+  if (sender) {
+    // ERC-20 balanceOf(address) call
+    const balanceData = await provider.request({
+      method: 'eth_call',
+      params: [{
+        to: ALEPH_TOKEN_ADDRESS,
+        data: '0x70a08231000000000000000000000000' + sender.slice(2).toLowerCase(),
+      }, 'latest'],
+    }) as string;
+    const balance = BigInt(balanceData);
+    if (balance === 0n) {
+      throw new Error(
+        'No ALEPH tokens found. You need ALEPH tokens in your wallet to store data on the Aleph network.'
+      );
+    }
+  }
+
+  // Step 3: Wrap provider with ethers5
   const web3Provider = new providers.Web3Provider(provider as providers.ExternalProvider);
 
-  // Step 3: Create Aleph wallet wrapper
+  // Step 4: Create Aleph wallet wrapper
   const wallet = new JsonRPCWallet(web3Provider);
   await wallet.connect();
 
@@ -65,7 +85,7 @@ export async function createPaste(
     throw new Error('Failed to get wallet address');
   }
 
-  // Step 4: Create Ethereum account for signing
+  // Step 5: Create Ethereum account for signing
   const account = new ETHAccount(wallet, wallet.address);
 
   // Step 5: Encode text and compute file hash
