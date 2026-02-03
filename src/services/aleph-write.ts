@@ -1,7 +1,12 @@
 // src/services/aleph-write.ts
 // Heavy write path — pulls in Aleph SDK + ethers5
+//
+// NOTE: We bypass the SDK's createStore because the SDK v1.x includes
+// item_content in store messages, but the Aleph API now rejects that
+// with 422: "storage messages cannot define item_content".
+// Instead we build the message manually, sign it with the SDK's account,
+// and POST the FormData ourselves.
 
-import { AuthenticatedAlephHttpClient } from '@aleph-sdk/client';
 import { ETHAccount } from '@aleph-sdk/ethereum';
 import { JsonRPCWallet } from '@aleph-sdk/evm';
 import { providers } from 'ethers5';
@@ -25,12 +30,17 @@ export interface WalletProvider {
 }
 
 /**
+ * SHA-256 hash of a Uint8Array, returned as hex string.
+ */
+async function sha256Hex(data: Uint8Array): Promise<string> {
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data as unknown as BufferSource);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
  * Create a paste and store it on Aleph network.
  * Returns the content hash that can be used to retrieve the paste.
- *
- * @param provider - Wallet provider (e.g., from WalletConnect)
- * @param text - The text content to store
- * @returns The content hash (item_hash) of the stored paste
  */
 export async function createPaste(
   provider: WalletProvider,
@@ -56,25 +66,71 @@ export async function createPaste(
   // Step 4: Create Ethereum account for signing
   const account = new ETHAccount(wallet, wallet.address);
 
-  // Step 5: Create authenticated client (using api2 — api3 rejects store uploads)
-  const client = new AuthenticatedAlephHttpClient(account, ALEPH_API_SERVER);
+  // Step 5: Encode text and compute file hash
+  const fileBytes = new TextEncoder().encode(text);
+  const fileHash = await sha256Hex(fileBytes);
 
-  // Step 6: Convert text to Buffer for storage
-  // The SDK's uploadStore does formData.append("file", fileObject) directly.
-  // Browser FormData needs a Blob for binary data — passing a raw Buffer gets
-  // stringified, causing a hash mismatch and 422 from the Aleph API.
-  // We also pre-compute the hash ourselves and pass fileHash so the SDK's
-  // internal W() → Ze() path uses the same bytes we're uploading.
-  const { Buffer } = await import('buffer');
-  const buf = Buffer.from(text, 'utf-8');
-  const fileObject = new Blob([buf], { type: 'application/octet-stream' });
+  // Step 6: Build the store message content (what gets hashed for item_hash)
+  const content = {
+    address: wallet.address,
+    item_type: 'storage',
+    item_hash: fileHash,
+    time: Date.now() / 1000,
+  };
+  const contentStr = JSON.stringify(content);
+  const contentBytes = new TextEncoder().encode(contentStr);
+  const itemHash = await sha256Hex(contentBytes);
 
-  // Step 7: Store the file (triggers signature popup)
-  const result = await client.createStore({
-    fileObject,
+  // Step 7: Build the unsigned message
+  const message = {
+    chain: 'ETH',
+    sender: wallet.address,
     channel: ALEPH_CHANNEL,
+    time: content.time,
+    item_type: 'inline' as const,
+    item_content: contentStr,
+    item_hash: itemHash,
+    type: 'STORE',
+  };
+
+  // Step 8: Sign the message (triggers wallet popup)
+  // The SDK's account.sign expects a message-like object with these fields
+  const signature = await account.sign(
+    { item_hash: message.item_hash, sender: message.sender, type: 'STORE' } as unknown as Parameters<typeof account.sign>[0]
+  );
+
+  // Step 9: Build broadcastable message WITHOUT item_content
+  // The Aleph API now rejects store messages that include item_content
+  const broadcastable = {
+    chain: message.chain,
+    sender: message.sender,
+    channel: message.channel,
+    time: message.time,
+    item_type: message.item_type,
+    item_hash: message.item_hash,
+    // item_content deliberately omitted — server rejects it for store messages
+    type: message.type,
+    signature,
+  };
+
+  // Step 10: Build FormData and upload
+  const formData = new FormData();
+  formData.append('metadata', JSON.stringify({
+    message: broadcastable,
     sync: true,
+  }));
+  formData.append('file', new Blob([fileBytes], { type: 'application/octet-stream' }));
+
+  const response = await fetch(`${ALEPH_API_SERVER}/api/v0/storage/add_file`, {
+    method: 'POST',
+    body: formData,
   });
 
-  return result.item_hash;
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Aleph API error (${response.status}): ${errorText}`);
+  }
+
+  const result = await response.json();
+  return result.item_hash ?? itemHash;
 }
