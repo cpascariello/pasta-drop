@@ -148,5 +148,9 @@ export async function createPaste(
   }
 
   const result = await response.json();
-  return result.item_hash ?? itemHash;
+  console.log('[Pasta Drop] API response:', result);
+
+  // The gateway serves raw files at /storage/raw/{fileHash}
+  // result.hash is the file content hash the API confirms
+  return result.hash ?? fileHash;
 }
