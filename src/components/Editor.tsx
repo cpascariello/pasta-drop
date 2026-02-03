@@ -1,6 +1,6 @@
 // src/components/Editor.tsx
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,9 +20,15 @@ export function Editor({ onPasteCreated }: EditorProps) {
   const [status, setStatus] = useState<string | null>(null);
   const [burst, setBurst] = useState<{ x: number; y: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const mountedRef = useRef(true);
 
   const { isConnected, connector } = useAccount();
   const { open } = useWeb3Modal();
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const clearBurst = useCallback(() => setBurst(null), []);
 
@@ -43,34 +49,42 @@ export function Editor({ onPasteCreated }: EditorProps) {
 
     try {
       const provider = await connector.getProvider() as WalletProvider;
-      const { createPaste } = await import('@/services/aleph-write');
-      const hash = await createPaste(provider, text);
-      setStatus('A tavola!');
-      // Fire celebration burst from button center
-      if (buttonRef.current) {
-        const rect = buttonRef.current.getBoundingClientRect();
-        setBurst({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
-      }
-      // Brief pause to show success state + burst
-      await new Promise(resolve => setTimeout(resolve, 800));
-      onPasteCreated(hash);
-    } catch (err) {
-      setStatus(null);
-      const { WrongChainError } = await import('@/services/aleph-write');
-      if (err instanceof WrongChainError) {
-        setError("Pasta's burning! Switch to Ethereum mainnet.");
-      } else if (err instanceof Error) {
-        // Check for user rejection
-        if (err.message.includes('rejected') || err.message.includes('denied')) {
-          setError('Chef walked out. Try again?');
-        } else {
-          setError(err.message);
+      const { createPaste, WrongChainError } = await import('@/services/aleph-write');
+      try {
+        const hash = await createPaste(provider, text);
+        if (!mountedRef.current) return;
+        setStatus('A tavola!');
+        // Fire celebration burst from button center
+        if (buttonRef.current) {
+          const rect = buttonRef.current.getBoundingClientRect();
+          setBurst({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
         }
-      } else {
-        setError("Kitchen's closed. Try again later.");
+        // Brief pause to show success state + burst
+        await new Promise(resolve => setTimeout(resolve, 800));
+        if (!mountedRef.current) return;
+        onPasteCreated(hash);
+      } catch (err) {
+        if (!mountedRef.current) return;
+        setStatus(null);
+        if (err instanceof WrongChainError) {
+          setError("Pasta's burning! Switch to Ethereum mainnet.");
+        } else if (err instanceof Error) {
+          // Check for user rejection
+          if (err.message.includes('rejected') || err.message.includes('denied')) {
+            setError('Chef walked out. Try again?');
+          } else {
+            setError(err.message);
+          }
+        } else {
+          setError("Kitchen's closed. Try again later.");
+        }
       }
+    } catch {
+      if (!mountedRef.current) return;
+      setStatus(null);
+      setError("Kitchen's closed. Try again later.");
     } finally {
-      setIsLoading(false);
+      if (mountedRef.current) setIsLoading(false);
     }
   };
 

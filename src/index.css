@@ -86,6 +86,7 @@
   --chart-3: oklch(0.9995 0.0801 87.6670);
   --chart-4: oklch(0.8798 0.1110 348.1791);
   --chart-5: oklch(0.6997 0.1899 353.9091);
+  --focus-glow: oklch(0.641 0.246 19.456 / 0.2);
   --radius: 1.25rem;
   --letter-spacing: 0em;
   --font-sans: "Lato", ui-sans-serif, system-ui, sans-serif;
@@ -142,6 +143,7 @@
   --chart-3: oklch(0.7499 0.0988 356.9762);
   --chart-4: oklch(0.5208 0.0702 217.0848);
   --chart-5: oklch(0.3513 0.0086 255.5780);
+  --focus-glow: oklch(0.7798 0.0896 201.8673 / 0.25);
   --radius: 1.25rem;
   --letter-spacing: 0em;
   --font-sans: "Lato", ui-sans-serif, system-ui, sans-serif;
@@ -210,7 +212,7 @@
 }
 
 .pasta-textarea:focus {
-  box-shadow: 0 0 0 3px oklch(0.641 0.246 19.456 / 0.2);
+  box-shadow: 0 0 0 3px var(--focus-glow);
   transform: scale(1.005);
 }
 

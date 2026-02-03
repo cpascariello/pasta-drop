@@ -1,6 +1,6 @@
 // src/components/Viewer.tsx
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { fetchPaste } from '@/services/aleph-read';
@@ -15,26 +15,50 @@ export function Viewer({ hash, onNewPaste }: ViewerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [bouncing, setBouncing] = useState(false);
+  const [bounceKey, setBounceKey] = useState(0);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
-    setIsLoading(true);
-    setError(null);
+    let stale = false;
+    const controller = new AbortController();
 
-    fetchPaste(hash)
-      .then(setContent)
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : "Kitchen's closed. Try again later.");
-      })
-      .finally(() => setIsLoading(false));
+    (async () => {
+      try {
+        const text = await fetchPaste(hash);
+        if (!stale) {
+          setContent(text);
+          setError(null);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        if (!stale) {
+          setError(err instanceof Error ? err.message : "Kitchen's closed. Try again later.");
+          setIsLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      stale = true;
+      controller.abort();
+    };
   }, [hash]);
 
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      clearTimeout(copiedTimerRef.current);
+    };
+  }, []);
+
   const copyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
+    navigator.clipboard.writeText(window.location.href).catch(() => {
+      setError('Could not copy to clipboard');
+    });
     setCopied(true);
-    setBouncing(true);
-    setTimeout(() => setCopied(false), 2000);
-    setTimeout(() => setBouncing(false), 350);
+    setBounceKey(k => k + 1);
+    clearTimeout(copiedTimerRef.current);
+    copiedTimerRef.current = setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -63,7 +87,7 @@ export function Viewer({ hash, onNewPaste }: ViewerProps) {
         )}
       </CardContent>
       <CardFooter className="flex gap-2">
-        <Button variant="outline" onClick={copyLink} className={`flex-1 ${bouncing ? 'button-bounce' : ''}`}>
+        <Button key={bounceKey} variant="outline" onClick={copyLink} className={`flex-1 ${bounceKey > 0 ? 'button-bounce' : ''}`}>
           {copied ? 'Perfetto!' : 'Mangia!'}
         </Button>
         <Button onClick={onNewPaste} className="flex-1">
