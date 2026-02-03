@@ -92,26 +92,17 @@ export async function createPaste(
   const fileBytes = new TextEncoder().encode(text);
   const fileHash = await sha256Hex(fileBytes);
 
-  // Step 7: Build the store message content (what gets hashed for item_hash)
-  const content = {
-    address: wallet.address,
-    item_type: 'storage',
-    item_hash: fileHash,
-    time: Date.now() / 1000,
-  };
-  const contentStr = JSON.stringify(content);
-  const contentBytes = new TextEncoder().encode(contentStr);
-  const itemHash = await sha256Hex(contentBytes);
-
-  // Step 8: Build the unsigned message
+  // Step 7: Build the unsigned message
+  // item_type is 'storage' because the file is uploaded via FormData (not inline).
+  // item_hash is the SHA-256 of the file bytes — the API will verify this matches.
+  const time = Date.now() / 1000;
   const message = {
     chain: 'ETH',
     sender: wallet.address,
     channel: ALEPH_CHANNEL,
-    time: content.time,
-    item_type: 'inline' as const,
-    item_content: contentStr,
-    item_hash: itemHash,
+    time,
+    item_type: 'storage' as const,
+    item_hash: fileHash,
     type: 'STORE',
   };
 
@@ -127,8 +118,7 @@ export async function createPaste(
   };
   const signature = await account.sign(signable);
 
-  // Step 10: Build broadcastable message WITHOUT item_content
-  // The Aleph API now rejects store messages that include item_content
+  // Step 10: Build broadcastable message
   const broadcastable = {
     chain: message.chain,
     sender: message.sender,
@@ -136,7 +126,6 @@ export async function createPaste(
     time: message.time,
     item_type: message.item_type,
     item_hash: message.item_hash,
-    // item_content deliberately omitted — server rejects it for store messages
     type: message.type,
     signature,
   };
@@ -160,5 +149,5 @@ export async function createPaste(
   }
 
   const result = await response.json();
-  return result.item_hash ?? itemHash;
+  return result.item_hash ?? fileHash;
 }
