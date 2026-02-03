@@ -1,12 +1,13 @@
 // src/components/Editor.tsx
 
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { createPaste, WrongChainError, type WalletProvider } from '@/services/aleph';
+import { CelebrationBurst } from '@/components/CelebrationBurst';
+import type { WalletProvider } from '@/services/aleph-write';
 
 interface EditorProps {
   onPasteCreated: (hash: string) => void;
@@ -17,9 +18,13 @@ export function Editor({ onPasteCreated }: EditorProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [burst, setBurst] = useState<{ x: number; y: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const { isConnected, connector } = useAccount();
   const { open } = useWeb3Modal();
+
+  const clearBurst = useCallback(() => setBurst(null), []);
 
   const handleCreate = async () => {
     if (!text.trim()) {
@@ -38,13 +43,20 @@ export function Editor({ onPasteCreated }: EditorProps) {
 
     try {
       const provider = await connector.getProvider() as WalletProvider;
+      const { createPaste } = await import('@/services/aleph-write');
       const hash = await createPaste(provider, text);
       setStatus('A tavola!');
-      // Brief pause to show success state
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Fire celebration burst from button center
+      if (buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setBurst({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+      }
+      // Brief pause to show success state + burst
+      await new Promise(resolve => setTimeout(resolve, 800));
       onPasteCreated(hash);
     } catch (err) {
       setStatus(null);
+      const { WrongChainError } = await import('@/services/aleph-write');
       if (err instanceof WrongChainError) {
         setError("Pasta's burning! Switch to Ethereum mainnet.");
       } else if (err instanceof Error) {
@@ -63,7 +75,7 @@ export function Editor({ onPasteCreated }: EditorProps) {
   };
 
   return (
-    <Card className="w-full max-w-3xl">
+    <Card className="w-full max-w-3xl card-entrance">
       <CardHeader>
         <CardTitle className="-rotate-1" style={{ fontFamily: '"Erica One", cursive' }}>New Pasta</CardTitle>
       </CardHeader>
@@ -72,7 +84,7 @@ export function Editor({ onPasteCreated }: EditorProps) {
           placeholder="Drop your pasta here..."
           value={text}
           onChange={(e) => setText(e.target.value)}
-          className="min-h-[400px] font-mono"
+          className="min-h-[400px] font-mono pasta-textarea"
           disabled={isLoading}
         />
         {error && (
@@ -85,6 +97,7 @@ export function Editor({ onPasteCreated }: EditorProps) {
       <CardFooter className="justify-end">
         {isConnected ? (
           <Button
+            ref={buttonRef}
             onClick={handleCreate}
             disabled={isLoading || !text.trim()}
             className="-rotate-1"
@@ -100,6 +113,7 @@ export function Editor({ onPasteCreated }: EditorProps) {
           </Button>
         )}
       </CardFooter>
+      {burst && <CelebrationBurst origin={burst} onComplete={clearBurst} />}
     </Card>
   );
 }

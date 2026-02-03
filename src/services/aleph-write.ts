@@ -1,10 +1,11 @@
-// src/services/aleph.ts
+// src/services/aleph-write.ts
+// Heavy write path — pulls in Aleph SDK + ethers5
 
 import { AuthenticatedAlephHttpClient } from '@aleph-sdk/client';
 import { ETHAccount } from '@aleph-sdk/ethereum';
 import { JsonRPCWallet } from '@aleph-sdk/evm';
 import { providers } from 'ethers5';
-import { ALEPH_CHANNEL, ETH_MAINNET_CHAIN_ID, ALEPH_GATEWAY } from '../config/aleph';
+import { ALEPH_CHANNEL, ETH_MAINNET_CHAIN_ID } from '../config/aleph';
 
 /**
  * Error thrown when user is on wrong chain
@@ -70,23 +71,4 @@ export async function createPaste(
   });
 
   return result.item_hash;
-}
-
-/**
- * Fetch a paste by its content hash.
- * This is a READ operation - no wallet needed.
- *
- * @param hash - The content hash returned from createPaste
- * @returns The text content of the paste
- */
-export async function fetchPaste(hash: string): Promise<string> {
-  const url = `${ALEPH_GATEWAY}/storage/raw/${hash}`;
-
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error("Kitchen's closed. Try again later.");
-  }
-
-  return response.text();
 }

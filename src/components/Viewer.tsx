@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { fetchPaste } from '@/services/aleph';
+import { fetchPaste } from '@/services/aleph-read';
 
 interface ViewerProps {
   hash: string;
@@ -15,6 +15,7 @@ export function Viewer({ hash, onNewPaste }: ViewerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [bouncing, setBouncing] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
@@ -31,11 +32,13 @@ export function Viewer({ hash, onNewPaste }: ViewerProps) {
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
+    setBouncing(true);
     setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setBouncing(false), 350);
   };
 
   return (
-    <Card className="w-full max-w-3xl">
+    <Card className="w-full max-w-3xl card-entrance">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Buon appetito!</span>
@@ -60,7 +63,7 @@ export function Viewer({ hash, onNewPaste }: ViewerProps) {
         )}
       </CardContent>
       <CardFooter className="flex gap-2">
-        <Button variant="outline" onClick={copyLink} className="flex-1">
+        <Button variant="outline" onClick={copyLink} className={`flex-1 ${bouncing ? 'button-bounce' : ''}`}>
           {copied ? 'Perfetto!' : 'Mangia!'}
         </Button>
         <Button onClick={onNewPaste} className="flex-1">
