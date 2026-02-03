@@ -46,6 +46,8 @@ export async function createPaste(
   provider: WalletProvider,
   text: string
 ): Promise<string> {
+  console.log('[Pasta Drop] createPaste v2 — bypassing SDK, posting to', ALEPH_API_SERVER);
+
   // Step 1: Verify user is on mainnet
   const chainId = await provider.request({ method: 'eth_chainId' }) as string;
   if (chainId !== ETH_MAINNET_CHAIN_ID) {
