@@ -60,9 +60,14 @@ export async function createPaste(
   const client = new AuthenticatedAlephHttpClient(account);
 
   // Step 6: Convert text to Buffer for storage
-  // Using Buffer (polyfilled) instead of File — matches current Aleph API expectations
+  // The SDK's uploadStore does formData.append("file", fileObject) directly.
+  // Browser FormData needs a Blob for binary data — passing a raw Buffer gets
+  // stringified, causing a hash mismatch and 422 from the Aleph API.
+  // We also pre-compute the hash ourselves and pass fileHash so the SDK's
+  // internal W() → Ze() path uses the same bytes we're uploading.
   const { Buffer } = await import('buffer');
-  const fileObject = Buffer.from(text, 'utf-8');
+  const buf = Buffer.from(text, 'utf-8');
+  const fileObject = new Blob([buf], { type: 'application/octet-stream' });
 
   // Step 7: Store the file (triggers signature popup)
   const result = await client.createStore({
