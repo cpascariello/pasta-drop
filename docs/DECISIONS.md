@@ -83,3 +83,21 @@ Each entry includes:
 **Decision:** CSS keyframes/transitions for deterministic UI feedback, imperative DOM + portal for the celebration burst particle effect
 **Rationale:** Animation responsibilities are stratified by complexity: CSS keyframes for one-shot feedback (card entrance, button bounce), CSS transitions for state-driven effects (textarea focus glow), imperative DOM for transient particle effects (burst). The burst uses `createPortal` to render above everything and self-cleans on completion. All animations respect `prefers-reduced-motion`. Timing vocabulary: 200ms micro-interactions, 350-400ms UI feedback, 700-800ms spectacle.
 **Alternatives considered:** Framer Motion (too heavy for these effects), React state-driven particles (unnecessary reconciliation overhead for 10 transient elements)
+
+## Decision #12 - 2026-02-03
+**Context:** Aleph API returning 422 "storage messages cannot define item_content" when using SDK v1.x `createStore()`
+**Decision:** Bypass the Aleph SDK's `createStore` entirely. Build the store message manually, sign with the SDK's `ETHAccount`, and POST FormData directly to the API.
+**Rationale:** The Aleph SDK v1.x always includes `item_content` in store messages, but the Aleph API now rejects it for STORE message types. Rather than waiting for an SDK update, we construct the message ourselves: SHA-256 hash the file bytes and content JSON via Web Crypto API, sign with the SDK's account, and POST to `/api/v0/storage/add_file` with `item_content` deliberately omitted from the broadcastable message.
+**Alternatives considered:** Patching the SDK locally (fragile, maintenance burden), downgrading to an older API endpoint (none available), using POST message type instead of STORE (wrong semantics for file storage)
+
+## Decision #13 - 2026-02-03
+**Context:** Choosing which Aleph API server to use for write operations
+**Decision:** Use `api2.aleph.im` instead of the SDK default `api3.aleph.im`
+**Rationale:** `api3.aleph.im` consistently returns 422 for store uploads even with correctly formed messages. `api2.aleph.im` accepts them. Both are official Aleph gateways.
+**Alternatives considered:** api3.aleph.im (SDK default, returns 422), api1.aleph.im (not tested)
+
+## Decision #14 - 2026-02-03
+**Context:** Users attempting to store data without ALEPH tokens get a cryptic API error
+**Decision:** Add a pre-flight ERC-20 balance check before attempting the store operation
+**Rationale:** Aleph storage requires holding ALEPH tokens (3 MB per token held). Checking the balance upfront with a raw `eth_call` to the ALEPH token contract (`balanceOf`) gives a clear error message instead of a confusing API failure. The check uses the token contract at `0x27702a26126e0b3702af63ee09ac4d1a084ef628`.
+**Alternatives considered:** Let the API fail and parse the error (poor UX), check balance server-side (adds complexity)

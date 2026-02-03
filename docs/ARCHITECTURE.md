@@ -51,11 +51,11 @@ src/
 **Notes:** Enables direct linking to pastes without a router library.
 
 ### Aleph Store Pattern
-**Date:** 2026-01-29
+**Date:** 2026-01-29, updated 2026-02-03
 **Context:** Need permanent, decentralized storage for paste content
-**Approach:** Use Aleph `createStore()` with File objects. Content is stored as raw text, retrievable via gateway URL without authentication.
-**Key files:** `src/services/aleph-write.ts`, `src/services/aleph-read.ts`
-**Notes:** Writes require wallet signature. Reads are public via `{ALEPH_GATEWAY}/storage/raw/{hash}`. Read and write paths are split into separate modules for code splitting — the write path pulls in Aleph SDK + ethers5, while the read path uses only `fetch()`.
+**Approach:** Manual message construction bypassing the Aleph SDK's `createStore()`. The SDK v1.x includes `item_content` in store messages, but the Aleph API now rejects that with 422. Instead, we build the message manually: SHA-256 hash the file bytes and content JSON via Web Crypto API, sign with the SDK's `ETHAccount`, and POST FormData to `api2.aleph.im` with `item_content` deliberately omitted. A pre-flight ALEPH token balance check (raw ERC-20 `balanceOf` call) prevents confusing API errors for users without tokens.
+**Key files:** `src/services/aleph-write.ts`, `src/services/aleph-read.ts`, `src/config/aleph.ts`
+**Notes:** Writes require wallet signature + ALEPH tokens (3 MB per token held). Reads are public via `{ALEPH_GATEWAY}/storage/raw/{hash}`. Read and write paths are split into separate modules for code splitting — the write path pulls in Aleph SDK (for `ETHAccount` signing only) + ethers5, while the read path uses only `fetch()`. Uses `api2.aleph.im` for writes (`api3` returns 422 for store uploads).
 
 ### Provider Wrapping for Aleph
 **Date:** 2026-01-29
