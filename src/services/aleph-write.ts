@@ -88,11 +88,11 @@ export async function createPaste(
   // Step 5: Create Ethereum account for signing
   const account = new ETHAccount(wallet, wallet.address);
 
-  // Step 5: Encode text and compute file hash
+  // Step 6: Encode text and compute file hash
   const fileBytes = new TextEncoder().encode(text);
   const fileHash = await sha256Hex(fileBytes);
 
-  // Step 6: Build the store message content (what gets hashed for item_hash)
+  // Step 7: Build the store message content (what gets hashed for item_hash)
   const content = {
     address: wallet.address,
     item_type: 'storage',
@@ -103,7 +103,7 @@ export async function createPaste(
   const contentBytes = new TextEncoder().encode(contentStr);
   const itemHash = await sha256Hex(contentBytes);
 
-  // Step 7: Build the unsigned message
+  // Step 8: Build the unsigned message
   const message = {
     chain: 'ETH',
     sender: wallet.address,
@@ -115,13 +115,19 @@ export async function createPaste(
     type: 'STORE',
   };
 
-  // Step 8: Sign the message (triggers wallet popup)
-  // The SDK's account.sign expects a message-like object with these fields
-  const signature = await account.sign(
-    { item_hash: message.item_hash, sender: message.sender, type: 'STORE' } as unknown as Parameters<typeof account.sign>[0]
-  );
+  // Step 9: Sign the message (triggers wallet popup)
+  // The SDK's sign() calls message.getVerificationBuffer() which must return
+  // Buffer.from([chain, sender, type, item_hash].join('\n'))
+  const { Buffer } = await import('buffer');
+  const signable = {
+    time: message.time,
+    sender: message.sender,
+    getVerificationBuffer: () =>
+      Buffer.from([message.chain, message.sender, message.type, message.item_hash].join('\n')),
+  };
+  const signature = await account.sign(signable);
 
-  // Step 9: Build broadcastable message WITHOUT item_content
+  // Step 10: Build broadcastable message WITHOUT item_content
   // The Aleph API now rejects store messages that include item_content
   const broadcastable = {
     chain: message.chain,
@@ -135,7 +141,7 @@ export async function createPaste(
     signature,
   };
 
-  // Step 10: Build FormData and upload
+  // Step 11: Build FormData and upload
   const formData = new FormData();
   formData.append('metadata', JSON.stringify({
     message: broadcastable,
