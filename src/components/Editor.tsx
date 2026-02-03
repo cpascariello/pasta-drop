@@ -1,7 +1,7 @@
 // src/components/Editor.tsx
 
 import { useState } from 'react';
-import { useAccount, useDisconnect } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,9 +18,8 @@ export function Editor({ onPasteCreated }: EditorProps) {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
-  const { address, isConnected, connector } = useAccount();
+  const { isConnected, connector } = useAccount();
   const { open } = useWeb3Modal();
-  const { disconnect } = useDisconnect();
 
   const handleCreate = async () => {
     if (!text.trim()) {
@@ -64,27 +63,16 @@ export function Editor({ onPasteCreated }: EditorProps) {
   };
 
   return (
-    <Card className="w-full max-w-2xl">
+    <Card className="w-full max-w-3xl">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>New Pasta</span>
-          {isConnected ? (
-            <Button variant="outline" size="sm" onClick={() => disconnect()}>
-              {address?.slice(0, 6)}...{address?.slice(-4)}
-            </Button>
-          ) : (
-            <Button variant="outline" size="sm" onClick={() => open()}>
-              Connect Wallet
-            </Button>
-          )}
-        </CardTitle>
+        <CardTitle className="-rotate-1" style={{ fontFamily: '"Erica One", cursive' }}>New Pasta</CardTitle>
       </CardHeader>
       <CardContent>
         <Textarea
           placeholder="Drop your pasta here..."
           value={text}
           onChange={(e) => setText(e.target.value)}
-          className="min-h-[300px] font-mono"
+          className="min-h-[400px] font-mono"
           disabled={isLoading}
         />
         {error && (
@@ -94,19 +82,20 @@ export function Editor({ onPasteCreated }: EditorProps) {
           <p className="mt-2 text-sm text-muted-foreground">{status}</p>
         )}
       </CardContent>
-      <CardFooter>
+      <CardFooter className="justify-end">
         {isConnected ? (
           <Button
             onClick={handleCreate}
             disabled={isLoading || !text.trim()}
-            className="w-full"
+            className="-rotate-1"
+            style={{ fontFamily: '"Erica One", cursive' }}
           >
-            <span className={isLoading ? 'pasta-spin-fast' : 'pasta-spin'}>🍝</span>
+            <span className={`text-lg ${isLoading ? 'pasta-spin-fast' : 'pasta-spin'}`}>🍝</span>
             {' '}
             {isLoading ? status || 'Al dente...' : 'Al dente'}
           </Button>
         ) : (
-          <Button onClick={() => open()} className="w-full">
+          <Button onClick={() => open()}>
             Connect Wallet to Drop Pasta
           </Button>
         )}

@@ -35,7 +35,7 @@ export function Viewer({ hash, onNewPaste }: ViewerProps) {
   };
 
   return (
-    <Card className="w-full max-w-2xl">
+    <Card className="w-full max-w-3xl">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Buon appetito!</span>
@@ -46,15 +46,15 @@ export function Viewer({ hash, onNewPaste }: ViewerProps) {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="flex items-center justify-center min-h-[300px]">
+          <div className="flex items-center justify-center min-h-[400px]">
             <span className="text-muted-foreground">Al dente...</span>
           </div>
         ) : error ? (
-          <div className="flex items-center justify-center min-h-[300px]">
+          <div className="flex items-center justify-center min-h-[400px]">
             <span className="text-red-500">{error}</span>
           </div>
         ) : (
-          <pre className="min-h-[300px] p-4 bg-muted rounded-md overflow-auto font-mono text-sm whitespace-pre-wrap">
+          <pre className="min-h-[400px] p-4 bg-muted rounded-md overflow-auto font-mono text-sm whitespace-pre-wrap">
             {content}
           </pre>
         )}
