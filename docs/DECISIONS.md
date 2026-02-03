@@ -85,9 +85,9 @@ Each entry includes:
 **Alternatives considered:** Framer Motion (too heavy for these effects), React state-driven particles (unnecessary reconciliation overhead for 10 transient elements)
 
 ## Decision #12 - 2026-02-03
-**Context:** Aleph API returning 422 "storage messages cannot define item_content" when using SDK v1.x `createStore()`
+**Context:** Aleph SDK v1.x `createStore()` fails with the current Aleph API due to signing and message-formatting issues
 **Decision:** Bypass the Aleph SDK's `createStore` entirely. Build the store message manually, sign with the SDK's `ETHAccount`, and POST FormData directly to the API.
-**Rationale:** The Aleph SDK v1.x always includes `item_content` in store messages, but the Aleph API now rejects it for STORE message types. Rather than waiting for an SDK update, we construct the message ourselves: SHA-256 hash the file bytes and content JSON via Web Crypto API, sign with the SDK's account, and POST to `/api/v0/storage/add_file` with `item_content` deliberately omitted from the broadcastable message.
+**Rationale:** The SDK's `createStore` had multiple incompatibilities: the `sign()` method requires a `getVerificationBuffer()` method on the message object (returning `Buffer.from([chain, sender, type, item_hash].join('\n'))`), and the `add_file` endpoint expects `item_type: 'inline'` with `item_content` containing store metadata JSON. Rather than patching the SDK, we construct the message manually and only use the SDK for `ETHAccount` wallet wrapping and signing.
 **Alternatives considered:** Patching the SDK locally (fragile, maintenance burden), downgrading to an older API endpoint (none available), using POST message type instead of STORE (wrong semantics for file storage)
 
 ## Decision #13 - 2026-02-03

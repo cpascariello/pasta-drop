@@ -35,6 +35,11 @@ Ideas and scope creep captured for later consideration.
 **Description:** Add detailed inline comments focused on teaching Aleph Cloud integration. Key areas: src/services/aleph-write.ts (expand Store vs POST explanation, link to Aleph SDK docs), src/config/aleph.ts (link to docs for channel/gateway concepts), src/components/Editor.tsx (explain wallet-to-Aleph handoff). Add a "How Aleph Storage Works" section to the README. Other tools (wagmi, React, physics) don't need additional commentary.
 **Priority:** Medium
 
+### 2026-02-03 - Hash Link to Aleph Explorer
+**Source:** Post-launch testing
+**Description:** Make the truncated hash display in the Viewer (e.g. `2e528cbe...7110558a`) a clickable link to `explorer.aleph.cloud` so users can inspect the storage message on-chain.
+**Priority:** Low
+
 ### 2026-02-03 - Mobile Touch Repulsion for Floating Emojis
 **Source:** Code review feedback
 **Description:** Add `touchmove` handler to FloatingEmojis so mobile users can interact with the repulsion effect (currently desktop-only via mousemove).
