@@ -5,7 +5,7 @@ import { AuthenticatedAlephHttpClient } from '@aleph-sdk/client';
 import { ETHAccount } from '@aleph-sdk/ethereum';
 import { JsonRPCWallet } from '@aleph-sdk/evm';
 import { providers } from 'ethers5';
-import { ALEPH_CHANNEL, ETH_MAINNET_CHAIN_ID } from '../config/aleph';
+import { ALEPH_API_SERVER, ALEPH_CHANNEL, ETH_MAINNET_CHAIN_ID } from '../config/aleph';
 
 /**
  * Error thrown when user is on wrong chain
@@ -56,8 +56,8 @@ export async function createPaste(
   // Step 4: Create Ethereum account for signing
   const account = new ETHAccount(wallet, wallet.address);
 
-  // Step 5: Create authenticated client
-  const client = new AuthenticatedAlephHttpClient(account);
+  // Step 5: Create authenticated client (using api2 — api3 rejects store uploads)
+  const client = new AuthenticatedAlephHttpClient(account, ALEPH_API_SERVER);
 
   // Step 6: Convert text to Buffer for storage
   // The SDK's uploadStore does formData.append("file", fileObject) directly.

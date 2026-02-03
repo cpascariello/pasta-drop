@@ -17,3 +17,10 @@ export const ETH_MAINNET_CHAIN_ID = '0x1';
  * Files are accessible at: {ALEPH_GATEWAY}/storage/raw/{hash}
  */
 export const ALEPH_GATEWAY = 'https://api2.aleph.im/api/v0';
+
+/**
+ * Aleph API server for write operations (createStore, etc.).
+ * The SDK defaults to api3.aleph.im which returns 422 for store uploads;
+ * api2 accepts them.
+ */
+export const ALEPH_API_SERVER = 'https://api2.aleph.im';
