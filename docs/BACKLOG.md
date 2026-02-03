@@ -15,11 +15,6 @@ Ideas and scope creep captured for later consideration.
 
 ## Open Items
 
-### 2026-01-29 - Flavor Chooser / Randomizer
-**Source:** Brainstorming session
-**Description:** Let users pick a "flavor" theme or randomize it. Different food puns for different pastes.
-**Priority:** Low
-
 ### 2026-01-29 - My Pasta + Save/Share Separation
 **Source:** Brainstorming session
 **Description:** Add a "My Pasta" history view per wallet. Separate save (private) vs share (public link) actions. Delete option from history.
@@ -55,10 +50,10 @@ Ideas and scope creep captured for later consideration.
 **Description:** Main card fades/slides in on load instead of appearing instantly.
 **Priority:** Low
 
-### 2026-02-03 - Floating Title Animation
-**Source:** Brainstorming spaghetti animations
-**Description:** "Pasta Drop" header with gentle bobbing animation, like floating in sauce.
-**Priority:** Low
+### 2026-02-03 - Elaborate Aleph-Focused Inline Comments
+**Source:** Cookbook documentation review
+**Description:** Add detailed inline comments focused on teaching Aleph Cloud integration. Key areas: src/services/aleph.ts (expand Store vs POST explanation, link to Aleph SDK docs), src/config/aleph.ts (link to docs for channel/gateway concepts), src/components/Editor.tsx (explain wallet-to-Aleph handoff). Add a "How Aleph Storage Works" section to the README. Other tools (wagmi, React, physics) don't need additional commentary.
+**Priority:** Medium
 
 ### 2026-01-29 - Code Splitting for Web3 Libraries
 **Source:** Build warnings
@@ -74,5 +69,11 @@ Ideas and scope creep captured for later consideration.
 
 ### 2026-02-03 - Move Connect Wallet Button ✓
 Completed in layout cleanup commit. Wallet button moved to fixed top-right of viewport, shown only when connected.
+
+### 2026-01-29 - Flavor Chooser / Randomizer ✗
+Dropped — low value for the effort. Single pasta personality works fine.
+
+### 2026-02-03 - Floating Title Animation ✗
+Dropped — title already has Erica One font + tilt. Adding motion would feel busy.
 
 </details>
