@@ -30,3 +30,8 @@ export const ALEPH_API_SERVER = 'https://api2.aleph.im';
  * Needed to check balance before store operations (3 MB per ALEPH held).
  */
 export const ALEPH_TOKEN_ADDRESS = '0x27702a26126e0b3702af63ee09ac4d1a084ef628';
+
+/**
+ * Aleph Explorer base URL for viewing stored messages.
+ */
+export const ALEPH_EXPLORER_URL = 'https://explorer.aleph.cloud';

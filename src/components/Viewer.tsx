@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { fetchPaste } from '@/services/aleph-read';
+import { ALEPH_GATEWAY } from '@/config/aleph';
 
 interface ViewerProps {
   hash: string;
@@ -66,9 +67,14 @@ export function Viewer({ hash, onNewPaste }: ViewerProps) {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Buon appetito!</span>
-          <span className="text-sm font-mono text-muted-foreground">
+          <a
+            href={`${ALEPH_GATEWAY}/storage/raw/${hash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-mono text-muted-foreground underline hover:text-foreground transition-colors"
+          >
             {hash.slice(0, 8)}...{hash.slice(-8)}
-          </span>
+          </a>
         </CardTitle>
       </CardHeader>
       <CardContent>

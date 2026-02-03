@@ -136,6 +136,19 @@ export function FloatingEmojis() {
       mouseRef.current.y = e.clientY;
     }
 
+    function handleTouchMove(e: TouchEvent) {
+      const touch = e.touches[0];
+      if (touch) {
+        mouseRef.current.x = touch.clientX;
+        mouseRef.current.y = touch.clientY;
+      }
+    }
+
+    function handleTouchEnd() {
+      mouseRef.current.x = -9999;
+      mouseRef.current.y = -9999;
+    }
+
     let paused = false;
     function handleVisibility() {
       if (document.hidden) {
@@ -245,6 +258,8 @@ export function FloatingEmojis() {
     }
 
     window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd);
     document.addEventListener('visibilitychange', handleVisibility);
     isMobile.addEventListener('change', handleMediaChange);
 
@@ -268,6 +283,8 @@ export function FloatingEmojis() {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
       document.removeEventListener('visibilitychange', handleVisibility);
       isMobile.removeEventListener('change', handleMediaChange);
       reducedMotion.removeEventListener('change', handleReducedMotionChange);

@@ -251,7 +251,47 @@
   border-width: 2px;
 }
 
+/* Slow gradient background shift — barely perceptible hue cycling.
+   Uses @property so the browser can interpolate the hue value.
+   Falls back to static background if @property is unsupported. */
+@property --bg-hue {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 345.7;
+}
+
+@keyframes bg-hue-shift {
+  0%   { --bg-hue: 345.7; }
+  25%  { --bg-hue: 30; }
+  50%  { --bg-hue: 75; }
+  75%  { --bg-hue: 200; }
+  100% { --bg-hue: 345.7; }
+}
+
+@keyframes bg-hue-shift-dark {
+  0%   { --bg-hue: 234.2; }
+  25%  { --bg-hue: 260; }
+  50%  { --bg-hue: 290; }
+  75%  { --bg-hue: 210; }
+  100% { --bg-hue: 234.2; }
+}
+
 body {
-  background-color: var(--color-background);
+  --bg-hue: 345.7;
+  background-color: oklch(1.0 0.02 var(--bg-hue));
   color: var(--color-foreground);
+  animation: bg-hue-shift 120s ease-in-out infinite;
+}
+
+.dark body {
+  --bg-hue: 234.2;
+  background-color: oklch(0.33 0.03 var(--bg-hue));
+  animation-name: bg-hue-shift-dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body {
+    animation: none;
+    background-color: var(--color-background);
+  }
 }
