@@ -1,11 +1,9 @@
 // src/services/aleph-write.ts
 // Heavy write path — pulls in Aleph SDK + ethers5
 //
-// NOTE: We bypass the SDK's createStore because the SDK v1.x includes
-// item_content in store messages, but the Aleph API now rejects that
-// with 422: "storage messages cannot define item_content".
-// Instead we build the message manually, sign it with the SDK's account,
-// and POST the FormData ourselves.
+// NOTE: We bypass the SDK's createStore because the SDK v1.x had issues
+// with the Aleph API. Instead we build the message manually, sign it
+// with the SDK's ETHAccount, and POST the FormData ourselves.
 
 import { ETHAccount } from '@aleph-sdk/ethereum';
 import { JsonRPCWallet } from '@aleph-sdk/evm';
@@ -92,48 +90,49 @@ export async function createPaste(
   const fileBytes = new TextEncoder().encode(text);
   const fileHash = await sha256Hex(fileBytes);
 
-  // Step 7: Build the unsigned message
-  // item_type is 'storage' because the file is uploaded via FormData (not inline).
-  // item_hash is the SHA-256 of the file bytes — the API will verify this matches.
+  // Step 7: Build item_content — the store metadata that references the file
   const time = Date.now() / 1000;
-  const message = {
-    chain: 'ETH',
-    sender: wallet.address,
-    channel: ALEPH_CHANNEL,
-    time,
-    item_type: 'storage' as const,
+  const itemContent = {
+    address: wallet.address,
+    item_type: 'storage',
     item_hash: fileHash,
-    type: 'STORE',
+    time,
   };
+  const itemContentStr = JSON.stringify(itemContent);
+
+  // Step 8: item_hash = SHA-256 of the item_content JSON string
+  const itemContentBytes = new TextEncoder().encode(itemContentStr);
+  const itemHash = await sha256Hex(itemContentBytes);
 
   // Step 9: Sign the message (triggers wallet popup)
   // The SDK's sign() calls message.getVerificationBuffer() which must return
   // Buffer.from([chain, sender, type, item_hash].join('\n'))
   const { Buffer } = await import('buffer');
   const signable = {
-    time: message.time,
-    sender: message.sender,
+    time,
+    sender: wallet.address,
     getVerificationBuffer: () =>
-      Buffer.from([message.chain, message.sender, message.type, message.item_hash].join('\n')),
+      Buffer.from(['ETH', wallet.address, 'STORE', itemHash].join('\n')),
   };
   const signature = await account.sign(signable);
 
-  // Step 10: Build broadcastable message
-  const broadcastable = {
-    chain: message.chain,
-    sender: message.sender,
-    channel: message.channel,
-    time: message.time,
-    item_type: message.item_type,
-    item_hash: message.item_hash,
-    type: message.type,
+  // Step 10: Build the full message with item_content included
+  const message = {
+    chain: 'ETH',
+    sender: wallet.address,
+    channel: ALEPH_CHANNEL,
+    time,
+    item_type: 'inline',
+    item_content: itemContentStr,
+    item_hash: itemHash,
+    type: 'STORE',
     signature,
   };
 
   // Step 11: Build FormData and upload
   const formData = new FormData();
   formData.append('metadata', JSON.stringify({
-    message: broadcastable,
+    message,
     sync: true,
   }));
   formData.append('file', new Blob([fileBytes], { type: 'application/octet-stream' }));
@@ -149,5 +148,5 @@ export async function createPaste(
   }
 
   const result = await response.json();
-  return result.item_hash ?? fileHash;
+  return result.item_hash ?? itemHash;
 }
