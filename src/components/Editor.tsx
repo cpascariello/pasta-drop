@@ -63,9 +63,16 @@ export function Editor({ onPasteCreated }: EditorProps) {
         await new Promise(resolve => setTimeout(resolve, 800));
         if (!mountedRef.current) return;
         onPasteCreated(hash);
-      } catch (err) {
+      } catch (err: unknown) {
         if (!mountedRef.current) return;
         setStatus(null);
+        // Log full error for debugging Aleph API issues
+        console.error('[Pasta Drop] createPaste failed:', err);
+        if (typeof err === 'object' && err !== null && 'response' in err) {
+          const axiosErr = err as { response?: { status?: number; data?: unknown } };
+          console.error('[Pasta Drop] Response status:', axiosErr.response?.status);
+          console.error('[Pasta Drop] Response data:', axiosErr.response?.data);
+        }
         if (err instanceof WrongChainError) {
           setError("Pasta's burning! Switch to Ethereum mainnet.");
         } else if (err instanceof Error) {

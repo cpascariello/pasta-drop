@@ -59,13 +59,14 @@ export async function createPaste(
   // Step 5: Create authenticated client
   const client = new AuthenticatedAlephHttpClient(account);
 
-  // Step 6: Convert text to Blob/File for storage
-  const blob = new Blob([text], { type: 'text/plain' });
-  const file = new File([blob], 'pasta.txt', { type: 'text/plain' });
+  // Step 6: Convert text to Buffer for storage
+  // Using Buffer (polyfilled) instead of File — matches current Aleph API expectations
+  const { Buffer } = await import('buffer');
+  const fileObject = Buffer.from(text, 'utf-8');
 
   // Step 7: Store the file (triggers signature popup)
   const result = await client.createStore({
-    fileObject: file,
+    fileObject,
     channel: ALEPH_CHANNEL,
     sync: true,
   });
