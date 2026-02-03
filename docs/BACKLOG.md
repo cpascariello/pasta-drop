@@ -60,11 +60,6 @@ Ideas and scope creep captured for later consideration.
 **Description:** "Pasta Drop" header with gentle bobbing animation, like floating in sauce.
 **Priority:** Low
 
-### 2026-02-03 - Move Connect Wallet Button
-**Source:** Brainstorming spaghetti animations
-**Description:** Move the wallet connect button out of the card component to the top-right of the viewport for cleaner layout.
-**Priority:** Medium
-
 ### 2026-01-29 - Code Splitting for Web3 Libraries
 **Source:** Build warnings
 **Description:** Large chunk sizes from web3 libraries (3.6MB main bundle). Implement dynamic imports and manual chunks to improve load time.
@@ -77,6 +72,7 @@ Ideas and scope creep captured for later consideration.
 <details>
 <summary>Archived items</summary>
 
-<!-- Move completed/rejected items here -->
+### 2026-02-03 - Move Connect Wallet Button ✓
+Completed in layout cleanup commit. Wallet button moved to fixed top-right of viewport, shown only when connected.
 
 </details>

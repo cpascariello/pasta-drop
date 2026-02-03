@@ -65,3 +65,9 @@ Each entry includes:
 **Decision:** RAF loop with direct DOM mutation via refs, no React state for positions
 **Rationale:** Using useState for 25 emoji positions at 60fps would cause 60 React reconciliation cycles/sec. Direct DOM mutation bypasses React entirely for zero re-render overhead. Physics constants extracted to config file for easy tuning.
 **Alternatives considered:** React state with useMemo, CSS-only animation, Framer Motion
+
+## Decision #9 - 2026-02-03
+**Context:** Typography choices for the app
+**Decision:** Erica One for display text (title, card headers, submit button), Lato for body/UI text
+**Rationale:** Erica One is rounded and playful, matching the pasta theme and tilted layout. Lato is clean and neutral, letting the display font be the personality without competing. Both loaded from Google Fonts.
+**Alternatives considered:** Ultra (too conventional/newspaper-like), Inter (default, no character)
