@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useAccount, useDisconnect } from 'wagmi';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { Editor } from '@/components/Editor';
 import { Viewer } from '@/components/Viewer';
+import { PastaHistory } from '@/components/PastaHistory';
 import { FloatingEmojis } from '@/components/FloatingEmojis';
 import { Button } from '@/components/ui/button';
 
@@ -32,20 +34,53 @@ function App() {
     window.location.hash = '';
   };
 
-  const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
+  // Navigate to a paste from history
+  const handleViewPaste = (pasteHash: string) => {
+    window.location.hash = pasteHash;
+  };
+
+  // Ethereum wallet state
+  const { address: ethAddress, isConnected: ethConnected } = useAccount();
+  const { disconnect: ethDisconnect } = useDisconnect();
+
+  // Solana wallet state
+  const { publicKey: solPublicKey, connected: solConnected, disconnect: solDisconnect } = useWallet();
+  const solAddress = solPublicKey?.toBase58();
+
+  const isConnected = ethConnected || solConnected;
+
+  // Determine active wallet for history
+  const activeChain = ethConnected ? 'ETH' : solConnected ? 'SOL' : null;
+  const activeAddress = ethConnected ? ethAddress : solConnected ? solAddress : null;
+
+  // Hash-based routing: #my-pasta = history, #<hash> = viewer, empty = editor
+  const showHistory = hash === 'my-pasta';
+  const showViewer = hash && !showHistory;
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative">
       <FloatingEmojis />
 
-      {isConnected && (
-        <div className="fixed top-4 right-4 z-20">
-          <Button variant="outline" size="sm" onClick={() => disconnect()}>
-            {address?.slice(0, 6)}...{address?.slice(-4)}
+      <div className="fixed top-4 right-4 z-20 flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!isConnected}
+          onClick={() => { window.location.hash = 'my-pasta'; }}
+        >
+          My Pasta
+        </Button>
+        {ethConnected && (
+          <Button variant="outline" size="sm" onClick={() => ethDisconnect()}>
+            {ethAddress?.slice(0, 6)}...{ethAddress?.slice(-4)} ✕
           </Button>
-        </div>
-      )}
+        )}
+        {solConnected && solAddress && (
+          <Button variant="outline" size="sm" onClick={() => solDisconnect()}>
+            {solAddress.slice(0, 4)}...{solAddress.slice(-4)} ✕
+          </Button>
+        )}
+      </div>
 
       <header className="mt-8 mb-10 text-center relative z-10">
         <h1 className="text-9xl mb-3 -translate-x-16 -rotate-2" style={{ fontFamily: '"Erica One", cursive' }}>Pasta Drop</h1>
@@ -55,10 +90,18 @@ function App() {
       </header>
 
       <main className="relative z-10 w-full flex justify-center">
-        {hash ? (
-          <Viewer hash={hash} onNewPaste={handleNewPaste} />
+        {showHistory && activeChain && activeAddress ? (
+          <PastaHistory
+            key="history"
+            chain={activeChain}
+            address={activeAddress}
+            onViewPaste={handleViewPaste}
+            onNewPaste={handleNewPaste}
+          />
+        ) : showViewer ? (
+          <Viewer key={hash} hash={hash} onNewPaste={handleNewPaste} />
         ) : (
-          <Editor onPasteCreated={handlePasteCreated} />
+          <Editor key="editor" onPasteCreated={handlePasteCreated} />
         )}
       </main>
 

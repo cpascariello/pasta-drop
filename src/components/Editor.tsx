@@ -1,12 +1,17 @@
 // src/components/Editor.tsx
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { createPaste, WrongChainError, type WalletProvider } from '@/services/aleph';
+import { CelebrationBurst } from '@/components/CelebrationBurst';
+import { addToHistory } from '@/services/pasta-history';
+import { storeExplorerMeta } from '@/services/explorer-meta';
+import type { WalletProvider, PasteResult } from '@/services/aleph-write';
+import type { SolanaWallet } from '@/services/aleph-write-sol';
 
 interface EditorProps {
   onPasteCreated: (hash: string) => void;
@@ -17,17 +22,38 @@ export function Editor({ onPasteCreated }: EditorProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [burst, setBurst] = useState<{ x: number; y: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const mountedRef = useRef(true);
 
-  const { isConnected, connector } = useAccount();
-  const { open } = useWeb3Modal();
+  // Ethereum wallet (wagmi)
+  const { isConnected: ethConnected, connector } = useAccount();
+  const { open: openEthModal } = useWeb3Modal();
 
+  // Solana wallet
+  const solWallet = useWallet();
+  const solConnected = solWallet.connected && !!solWallet.publicKey;
+
+  const isConnected = ethConnected || solConnected;
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  const clearBurst = useCallback(() => setBurst(null), []);
+
+  // Wallet-to-Aleph handoff:
+  // - Ethereum: connector.getProvider() → EIP-1193 provider → aleph-write.ts
+  // - Solana: useWallet() → signMessage adapter → aleph-write-sol.ts
+  // Both paths are dynamically imported for code splitting.
   const handleCreate = async () => {
     if (!text.trim()) {
       setError("Can't serve an empty plate.");
       return;
     }
 
-    if (!connector) {
+    if (!isConnected) {
       setError('No wallet connected');
       return;
     }
@@ -37,18 +63,61 @@ export function Editor({ onPasteCreated }: EditorProps) {
     setStatus('Al dente...');
 
     try {
-      const provider = await connector.getProvider() as WalletProvider;
-      const hash = await createPaste(provider, text);
+      let result: PasteResult;
+
+      if (ethConnected && connector) {
+        // Ethereum path
+        const provider = await connector.getProvider() as WalletProvider;
+        const { createPaste, WrongChainError } = await import('@/services/aleph-write');
+        try {
+          result = await createPaste(provider, text);
+        } catch (err: unknown) {
+          if (!mountedRef.current) return;
+          if (err instanceof WrongChainError) {
+            throw new Error("Pasta's burning! Switch to Ethereum mainnet.");
+          }
+          throw err;
+        }
+      } else if (solConnected) {
+        // Solana path
+        const { createPasteSolana } = await import('@/services/aleph-write-sol');
+        result = await createPasteSolana(solWallet as SolanaWallet, text);
+      } else {
+        throw new Error('No wallet connected');
+      }
+
+      if (!mountedRef.current) return;
+
+      // Store explorer metadata so the Viewer can link to the Aleph Explorer
+      storeExplorerMeta(result.fileHash, {
+        itemHash: result.itemHash,
+        sender: result.sender,
+        chain: result.chain,
+      });
+
+      // Save to local history for "My Pasta" view
+      addToHistory(result.chain, result.sender, {
+        hash: result.fileHash,
+        preview: text.slice(0, 80),
+        createdAt: Date.now(),
+        chain: result.chain,
+      });
+
       setStatus('A tavola!');
-      // Brief pause to show success state
-      await new Promise(resolve => setTimeout(resolve, 500));
-      onPasteCreated(hash);
-    } catch (err) {
+      // Fire celebration burst from button center
+      if (buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setBurst({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+      }
+      // Brief pause to show success state before navigating
+      await new Promise(resolve => setTimeout(resolve, 800));
+      if (!mountedRef.current) return;
+      onPasteCreated(result.fileHash);
+    } catch (err: unknown) {
+      if (!mountedRef.current) return;
       setStatus(null);
-      if (err instanceof WrongChainError) {
-        setError("Pasta's burning! Switch to Ethereum mainnet.");
-      } else if (err instanceof Error) {
-        // Check for user rejection
+      console.error('[Pasta Drop] createPaste failed:', err);
+      if (err instanceof Error) {
         if (err.message.includes('rejected') || err.message.includes('denied')) {
           setError('Chef walked out. Try again?');
         } else {
@@ -58,12 +127,12 @@ export function Editor({ onPasteCreated }: EditorProps) {
         setError("Kitchen's closed. Try again later.");
       }
     } finally {
-      setIsLoading(false);
+      if (mountedRef.current) setIsLoading(false);
     }
   };
 
   return (
-    <Card className="w-full max-w-3xl">
+    <Card className="w-full max-w-3xl card-entrance">
       <CardHeader>
         <CardTitle className="-rotate-1" style={{ fontFamily: '"Erica One", cursive' }}>New Pasta</CardTitle>
       </CardHeader>
@@ -72,7 +141,7 @@ export function Editor({ onPasteCreated }: EditorProps) {
           placeholder="Drop your pasta here..."
           value={text}
           onChange={(e) => setText(e.target.value)}
-          className="min-h-[400px] font-mono"
+          className="min-h-[400px] font-mono pasta-textarea"
           disabled={isLoading}
         />
         {error && (
@@ -82,9 +151,10 @@ export function Editor({ onPasteCreated }: EditorProps) {
           <p className="mt-2 text-sm text-muted-foreground">{status}</p>
         )}
       </CardContent>
-      <CardFooter className="justify-end">
+      <CardFooter className="justify-end gap-2">
         {isConnected ? (
           <Button
+            ref={buttonRef}
             onClick={handleCreate}
             disabled={isLoading || !text.trim()}
             className="-rotate-1"
@@ -95,11 +165,17 @@ export function Editor({ onPasteCreated }: EditorProps) {
             {isLoading ? status || 'Al dente...' : 'Al dente'}
           </Button>
         ) : (
-          <Button onClick={() => open()}>
-            Connect Wallet to Drop Pasta
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => openEthModal()}>
+              Connect Ethereum
+            </Button>
+            <Button variant="outline" onClick={() => solWallet.select?.('Phantom' as never)}>
+              Connect Solana
+            </Button>
+          </div>
         )}
       </CardFooter>
+      {burst && <CelebrationBurst origin={burst} onComplete={clearBurst} />}
     </Card>
   );
 }

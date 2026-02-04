@@ -71,3 +71,51 @@ Each entry includes:
 **Decision:** Erica One for display text (title, card headers, submit button), Lato for body/UI text
 **Rationale:** Erica One is rounded and playful, matching the pasta theme and tilted layout. Lato is clean and neutral, letting the display font be the personality without competing. Both loaded from Google Fonts.
 **Alternatives considered:** Ultra (too conventional/newspaper-like), Inter (default, no character)
+
+## Decision #10 - 2026-02-03
+**Context:** Code splitting strategy for 3.6MB monolithic bundle
+**Decision:** Split `aleph.ts` into read/write modules, dynamic `import()` for `createPaste`, manual chunks in Vite config (vendor-web3, vendor-aleph, vendor-ui)
+**Rationale:** `fetchPaste` uses plain `fetch()` with zero heavy deps — it should not force loading Aleph SDK + ethers5 on the Viewer path. Manual chunks separate vendor libraries for independent caching. Main chunk went from 3,608 KB → 224 KB.
+**Alternatives considered:** Lazy-loading entire Editor/Viewer components (rejected — wagmi hooks needed at App level), single dynamic import for all of aleph.ts (rejected — fetchPaste is too lightweight to bundle with write deps)
+
+## Decision #11 - 2026-02-03
+**Context:** UI micro-animation approach for card entrance, textarea focus, copy button bounce, and celebration burst
+**Decision:** CSS keyframes/transitions for deterministic UI feedback, imperative DOM + portal for the celebration burst particle effect
+**Rationale:** Animation responsibilities are stratified by complexity: CSS keyframes for one-shot feedback (card entrance, button bounce), CSS transitions for state-driven effects (textarea focus glow), imperative DOM for transient particle effects (burst). The burst uses `createPortal` to render above everything and self-cleans on completion. All animations respect `prefers-reduced-motion`. Timing vocabulary: 200ms micro-interactions, 350-400ms UI feedback, 700-800ms spectacle.
+**Alternatives considered:** Framer Motion (too heavy for these effects), React state-driven particles (unnecessary reconciliation overhead for 10 transient elements)
+
+## Decision #12 - 2026-02-03
+**Context:** Aleph SDK v1.x `createStore()` fails with the current Aleph API due to signing and message-formatting issues
+**Decision:** Bypass the Aleph SDK's `createStore` entirely. Build the store message manually, sign with the SDK's `ETHAccount`, and POST FormData directly to the API.
+**Rationale:** The SDK's `createStore` had multiple incompatibilities: the `sign()` method requires a `getVerificationBuffer()` method on the message object (returning `Buffer.from([chain, sender, type, item_hash].join('\n'))`), and the `add_file` endpoint expects `item_type: 'inline'` with `item_content` containing store metadata JSON. Rather than patching the SDK, we construct the message manually and only use the SDK for `ETHAccount` wallet wrapping and signing.
+**Alternatives considered:** Patching the SDK locally (fragile, maintenance burden), downgrading to an older API endpoint (none available), using POST message type instead of STORE (wrong semantics for file storage)
+
+## Decision #13 - 2026-02-03
+**Context:** Choosing which Aleph API server to use for write operations
+**Decision:** Use `api2.aleph.im` instead of the SDK default `api3.aleph.im`
+**Rationale:** `api3.aleph.im` consistently returns 422 for store uploads even with correctly formed messages. `api2.aleph.im` accepts them. Both are official Aleph gateways.
+**Alternatives considered:** api3.aleph.im (SDK default, returns 422), api1.aleph.im (not tested)
+
+## Decision #14 - 2026-02-03
+**Context:** Users attempting to store data without ALEPH tokens get a cryptic API error
+**Decision:** Add a pre-flight ERC-20 balance check before attempting the store operation
+**Rationale:** Aleph storage requires holding ALEPH tokens (3 MB per token held). Checking the balance upfront with a raw `eth_call` to the ALEPH token contract (`balanceOf`) gives a clear error message instead of a confusing API failure. The check uses the token contract at `0x27702a26126e0b3702af63ee09ac4d1a084ef628`.
+**Alternatives considered:** Let the API fail and parse the error (poor UX), check balance server-side (adds complexity)
+
+## Decision #15 - 2026-02-03
+**Context:** Adding Solana wallet support alongside Ethereum
+**Decision:** Parallel provider stacks (wagmi + Solana wallet adapter) with separate write modules per chain, dynamically imported
+**Rationale:** The Aleph SDK already supports Solana via `@aleph-sdk/solana`. Keeping the signing paths in separate modules (`aleph-write.ts` for ETH, `aleph-write-sol.ts` for SOL) maintains code splitting — Solana SDK is only loaded when a Solana wallet creates a paste. Both paths share the same manual message construction pattern.
+**Alternatives considered:** Single unified write module (rejected — would bundle both SDKs together), Solana-only app (rejected — Ethereum is the primary Aleph chain)
+
+## Decision #16 - 2026-02-03
+**Context:** Users need to find their past pastes
+**Decision:** localStorage-based per-wallet history with `#my-pasta` route
+**Rationale:** Aleph doesn't provide a built-in "list messages by sender" query that's fast enough for UX. Storing lightweight metadata (hash, preview, timestamp) in localStorage keyed by `{chain}:{address}` is instant and works offline. 50-entry cap prevents unbounded growth. Delete only removes local metadata — pastes remain on Aleph (they're immutable anyway).
+**Alternatives considered:** Query Aleph indexer for sender's messages (slow, requires additional API), server-side database (defeats decentralized purpose)
+
+## Decision #17 - 2026-02-03
+**Context:** Background animation felt too static
+**Decision:** Slow 120-second oklch hue cycling on the page background using CSS `@property`
+**Rationale:** `@property --bg-hue` registers a custom property as `<number>`, making it animatable with CSS keyframes. The 120s duration is barely perceptible — gives a living feel without distraction. Separate keyframes for dark mode (lower chroma). `prefers-reduced-motion` disables it entirely.
+**Alternatives considered:** JavaScript-driven color transitions (unnecessary overhead), faster cycling (too distracting)

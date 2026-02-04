@@ -38,6 +38,45 @@ Get a project ID at [cloud.walletconnect.com](https://cloud.walletconnect.com).
 3. **Share** — Click "Mangia!" to copy the permanent link
 4. **Serve** — Anyone can open the link — no wallet needed. Buon appetito!
 
+## How Aleph Storage Works
+
+[Aleph Cloud](https://aleph.cloud) is a decentralized storage and compute network. Here's how Pasta Drop uses it:
+
+### Content-Addressable Storage
+
+Files on Aleph are identified by their SHA-256 hash. The hash **is** the address — there's no database, no IDs, no filenames. If you know the hash, you can retrieve the file from any Aleph gateway:
+
+```
+https://api2.aleph.im/api/v0/storage/raw/{sha256-hash}
+```
+
+### STORE Messages
+
+To upload a file, you send a signed **STORE message** to an Aleph API node. The message has two layers:
+
+1. **Outer message** — envelope with chain, sender, signature, and `item_content`
+2. **Inner item_content** — JSON metadata pointing to the file hash
+
+The outer `item_hash` is the SHA-256 of the `item_content` JSON string. The inner `item_content.item_hash` is the SHA-256 of the actual file bytes.
+
+### Token-Based Storage
+
+Aleph uses a hold-to-use model: each ALEPH token held on Ethereum mainnet grants ~3 MB of storage quota. Tokens are **not spent** — just held. The app checks your balance before uploading.
+
+### Read vs Write Paths
+
+| Path | Dependencies | Auth Required |
+|------|-------------|---------------|
+| **Read** (`aleph-read.ts`) | `fetch()` only | No |
+| **Write ETH** (`aleph-write.ts`) | Aleph SDK + ethers5 | Ethereum wallet |
+| **Write SOL** (`aleph-write-sol.ts`) | Aleph SDK + @solana/wallet-adapter | Solana wallet |
+
+The write path is loaded via dynamic `import()` only when the user creates a paste, keeping the initial bundle small.
+
+### SDK Bypass
+
+We bypass the Aleph SDK's `createStore()` and construct messages manually. This is due to compatibility issues between the SDK v1.x and the current API. See `docs/DECISIONS.md` for details.
+
 ## Microcopy
 
 | Action | Text |
@@ -45,9 +84,10 @@ Get a project ID at [cloud.walletconnect.com](https://cloud.walletconnect.com).
 | Create button | "Al dente" |
 | Loading | "Al dente..." |
 | Success | "A tavola!" |
-| Copy link | "Mangia!" |
-| Copied | "Perfetto!" |
-| New paste | "Cook your own" |
+| Copy link | "Share your bolo" |
+| Copied | "Copied!" |
+| Viewer header | "Pasta Served" |
+| New paste | "Drop another" |
 
 ## Tech Stack
 

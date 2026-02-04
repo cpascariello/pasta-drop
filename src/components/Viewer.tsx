@@ -1,9 +1,11 @@
 // src/components/Viewer.tsx
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { fetchPaste } from '@/services/aleph';
+import { fetchPaste } from '@/services/aleph-read';
+import { ALEPH_EXPLORER_URL, ALEPH_GATEWAY } from '@/config/aleph';
+import { getExplorerMeta } from '@/services/explorer-meta';
 
 interface ViewerProps {
   hash: string;
@@ -15,33 +17,71 @@ export function Viewer({ hash, onNewPaste }: ViewerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [bounceKey, setBounceKey] = useState(0);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
-    setIsLoading(true);
-    setError(null);
+    let stale = false;
+    const controller = new AbortController();
 
-    fetchPaste(hash)
-      .then(setContent)
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : "Kitchen's closed. Try again later.");
-      })
-      .finally(() => setIsLoading(false));
+    (async () => {
+      try {
+        const text = await fetchPaste(hash);
+        if (!stale) {
+          setContent(text);
+          setError(null);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        if (!stale) {
+          setError(err instanceof Error ? err.message : "Kitchen's closed. Try again later.");
+          setIsLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      stale = true;
+      controller.abort();
+    };
   }, [hash]);
 
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      clearTimeout(copiedTimerRef.current);
+    };
+  }, []);
+
   const copyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
+    navigator.clipboard.writeText(window.location.href).catch(() => {
+      setError('Could not copy to clipboard');
+    });
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setBounceKey(k => k + 1);
+    clearTimeout(copiedTimerRef.current);
+    copiedTimerRef.current = setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <Card className="w-full max-w-3xl">
+    <Card className="w-full max-w-3xl card-entrance">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Buon appetito!</span>
-          <span className="text-sm font-mono text-muted-foreground">
+          <span className="-rotate-1" style={{ fontFamily: '"Erica One", cursive' }}>Pasta Served</span>
+          <a
+            href={(() => {
+              const meta = getExplorerMeta(hash);
+              if (meta) {
+                return `${ALEPH_EXPLORER_URL}/address/${meta.chain}/${meta.sender}/message/STORE/${meta.itemHash}`;
+              }
+              return `${ALEPH_GATEWAY}/storage/raw/${hash}`;
+            })()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-mono text-muted-foreground underline hover:text-foreground transition-colors"
+          >
             {hash.slice(0, 8)}...{hash.slice(-8)}
-          </span>
+          </a>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -60,11 +100,11 @@ export function Viewer({ hash, onNewPaste }: ViewerProps) {
         )}
       </CardContent>
       <CardFooter className="flex gap-2">
-        <Button variant="outline" onClick={copyLink} className="flex-1">
-          {copied ? 'Perfetto!' : 'Mangia!'}
+        <Button key={bounceKey} variant="outline" onClick={copyLink} className={`flex-1 ${bounceKey > 0 ? 'button-bounce' : ''}`}>
+          {copied ? 'Copied!' : 'Share your bolo'}
         </Button>
         <Button onClick={onNewPaste} className="flex-1">
-          Cook your own
+          Drop another
         </Button>
       </CardFooter>
     </Card>

@@ -136,23 +136,33 @@ npm run lint     # Run ESLint
 | `src/components/Editor.tsx` | Paste creation UI with wallet connection |
 | `src/components/Viewer.tsx` | Paste viewing UI with copy link |
 | `src/components/FloatingEmojis.tsx` | Ambient floating spaghetti background |
-| `src/services/aleph.ts` | `createPaste()` and `fetchPaste()` |
+| `src/components/CelebrationBurst.tsx` | One-shot emoji confetti on paste creation |
+| `src/services/aleph-read.ts` | `fetchPaste()` — lightweight, no heavy deps |
+| `src/services/aleph-write.ts` | `createPaste()` — Aleph SDK + ethers5 (Ethereum) |
+| `src/services/aleph-write-sol.ts` | `createPasteSolana()` — Aleph SDK + Solana adapter |
+| `src/services/pasta-history.ts` | localStorage CRUD for per-wallet paste history |
+| `src/services/explorer-meta.ts` | localStorage cache for Aleph Explorer link metadata |
+| `src/components/PastaHistory.tsx` | My Pasta history list component |
 | `src/config/wagmi.ts` | WalletConnect configuration |
+| `src/config/solana.ts` | Solana network/endpoint configuration |
 | `src/config/aleph.ts` | Aleph constants |
 | `src/config/floatingEmojis.ts` | Floating emoji tuning (counts, opacity, sizes, speed) |
+| `src/config/celebration.ts` | Celebration burst tuning (emojis, count, spread, duration) |
 
 ### URL Structure
 
 - `https://app.example.com/` → Editor view
 - `https://app.example.com/#<hash>` → Viewer showing paste at hash
+- `https://app.example.com/#my-pasta` → Per-wallet paste history
 
 ### Branding
 
 See `docs/plans/BRANDING.md` for full microcopy guide. Key terms:
 - "Al dente" = Create/Submit
-- "Mangia!" = Copy link
-- "Buon appetito!" = View header
+- "Share your bolo" = Copy link
+- "Pasta Served" = View header
 - "A tavola!" = Success
+- "Drop another" = New paste
 
 ### Before Deploying
 
