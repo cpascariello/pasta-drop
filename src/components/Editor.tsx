@@ -109,8 +109,8 @@ export function Editor({ onPasteCreated }: EditorProps) {
         const rect = buttonRef.current.getBoundingClientRect();
         setBurst({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
       }
-      // Pause to let the celebration burst play out before navigating
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Brief pause to show success state before navigating
+      await new Promise(resolve => setTimeout(resolve, 800));
       if (!mountedRef.current) return;
       onPasteCreated(result.fileHash);
     } catch (err: unknown) {

@@ -92,15 +92,16 @@ function App() {
       <main className="relative z-10 w-full flex justify-center">
         {showHistory && activeChain && activeAddress ? (
           <PastaHistory
+            key="history"
             chain={activeChain}
             address={activeAddress}
             onViewPaste={handleViewPaste}
             onNewPaste={handleNewPaste}
           />
         ) : showViewer ? (
-          <Viewer hash={hash} onNewPaste={handleNewPaste} />
+          <Viewer key={hash} hash={hash} onNewPaste={handleNewPaste} />
         ) : (
-          <Editor onPasteCreated={handlePasteCreated} />
+          <Editor key="editor" onPasteCreated={handlePasteCreated} />
         )}
       </main>
 
