@@ -139,12 +139,11 @@ npm run lint     # Run ESLint
 | `src/components/CelebrationBurst.tsx` | One-shot emoji confetti on paste creation |
 | `src/services/aleph-read.ts` | `fetchPaste()` — lightweight, no heavy deps |
 | `src/services/aleph-write.ts` | `createPaste()` — Aleph SDK + ethers5 (Ethereum) |
-| `src/services/aleph-write-sol.ts` | `createPasteSolana()` — Aleph SDK + Solana adapter |
+| `src/services/aleph-write-sol.ts` | `createPasteSolana()` — Aleph SDK + AppKit Solana provider |
 | `src/services/pasta-history.ts` | localStorage CRUD for per-wallet paste history |
 | `src/services/explorer-meta.ts` | localStorage cache for Aleph Explorer link metadata |
 | `src/components/PastaHistory.tsx` | My Pasta history list component |
-| `src/config/wagmi.ts` | WalletConnect configuration |
-| `src/config/solana.ts` | Solana network/endpoint configuration |
+| `src/config/appkit.ts` | Reown AppKit config (unified Ethereum + Solana modal) |
 | `src/config/aleph.ts` | Aleph constants |
 | `src/config/floatingEmojis.ts` | Floating emoji tuning (counts, opacity, sizes, speed) |
 | `src/config/celebration.ts` | Celebration burst tuning (emojis, count, spread, duration) |
@@ -166,6 +165,6 @@ See `docs/plans/BRANDING.md` for full microcopy guide. Key terms:
 
 ### Before Deploying
 
-1. Get WalletConnect project ID from [cloud.walletconnect.com](https://cloud.walletconnect.com)
-2. Update `src/config/wagmi.ts` with your project ID
+1. Get WalletConnect project ID from [cloud.reown.com](https://cloud.reown.com)
+2. Set `VITE_WALLETCONNECT_PROJECT_ID` in `.env`
 3. Deploy to any static host (Vercel, Netlify, GitHub Pages)

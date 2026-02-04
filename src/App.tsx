@@ -1,13 +1,28 @@
 // src/App.tsx
 
 import { useEffect, useState } from 'react';
-import { useAccount, useDisconnect } from 'wagmi';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 import { Editor } from '@/components/Editor';
 import { Viewer } from '@/components/Viewer';
 import { PastaHistory } from '@/components/PastaHistory';
 import { FloatingEmojis } from '@/components/FloatingEmojis';
 import { Button } from '@/components/ui/button';
+
+/** Extract chain and address from a CAIP-10 address string. */
+function parseCaip(caipAddress: string | undefined): { chain: 'ETH' | 'SOL' | null; address: string | null } {
+  if (!caipAddress) return { chain: null, address: null };
+  if (caipAddress.startsWith('eip155:')) {
+    // eip155:1:0xABC...
+    const address = caipAddress.split(':')[2] ?? null;
+    return { chain: 'ETH', address };
+  }
+  if (caipAddress.startsWith('solana:')) {
+    // solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:ABC...
+    const address = caipAddress.split(':')[2] ?? null;
+    return { chain: 'SOL', address };
+  }
+  return { chain: null, address: null };
+}
 
 function App() {
   const [hash, setHash] = useState<string | null>(null);
@@ -39,19 +54,17 @@ function App() {
     window.location.hash = pasteHash;
   };
 
-  // Ethereum wallet state
-  const { address: ethAddress, isConnected: ethConnected } = useAccount();
-  const { disconnect: ethDisconnect } = useDisconnect();
+  // Unified wallet state from AppKit
+  const { isConnected, caipAddress, address } = useAppKitAccount();
+  const { disconnect } = useDisconnect();
 
-  // Solana wallet state
-  const { publicKey: solPublicKey, connected: solConnected, disconnect: solDisconnect } = useWallet();
-  const solAddress = solPublicKey?.toBase58();
+  const { chain: activeChain } = parseCaip(caipAddress);
+  const activeAddress = address ?? null;
 
-  const isConnected = ethConnected || solConnected;
-
-  // Determine active wallet for history
-  const activeChain = ethConnected ? 'ETH' : solConnected ? 'SOL' : null;
-  const activeAddress = ethConnected ? ethAddress : solConnected ? solAddress : null;
+  // Truncated address for display
+  const displayAddress = activeAddress
+    ? `${activeAddress.slice(0, 6)}...${activeAddress.slice(-4)}`
+    : null;
 
   // Hash-based routing: #my-pasta = history, #<hash> = viewer, empty = editor
   const showHistory = hash === 'my-pasta';
@@ -70,14 +83,9 @@ function App() {
         >
           My Pasta
         </Button>
-        {ethConnected && (
-          <Button variant="outline" size="sm" onClick={() => ethDisconnect()}>
-            {ethAddress?.slice(0, 6)}...{ethAddress?.slice(-4)} ✕
-          </Button>
-        )}
-        {solConnected && solAddress && (
-          <Button variant="outline" size="sm" onClick={() => solDisconnect()}>
-            {solAddress.slice(0, 4)}...{solAddress.slice(-4)} ✕
+        {isConnected && displayAddress && (
+          <Button variant="outline" size="sm" onClick={() => disconnect()}>
+            {displayAddress} ✕
           </Button>
         )}
       </div>

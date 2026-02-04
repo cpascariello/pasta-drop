@@ -108,6 +108,18 @@ Each entry includes:
 **Rationale:** The Aleph SDK already supports Solana via `@aleph-sdk/solana`. Keeping the signing paths in separate modules (`aleph-write.ts` for ETH, `aleph-write-sol.ts` for SOL) maintains code splitting — Solana SDK is only loaded when a Solana wallet creates a paste. Both paths share the same manual message construction pattern.
 **Alternatives considered:** Single unified write module (rejected — would bundle both SDKs together), Solana-only app (rejected — Ethereum is the primary Aleph chain)
 
+## Decision #18 - 2026-02-04
+**Context:** Ethereum used WalletConnect modal but Solana hardcoded Phantom wallet selection — inconsistent UX
+**Decision:** Replace `@web3modal/wagmi` + `@solana/wallet-adapter-react` with Reown AppKit (`@reown/appkit` + `@reown/appkit-adapter-wagmi` + `@reown/appkit-adapter-solana`) for a single unified wallet modal
+**Rationale:** Reown AppKit (successor to Web3Modal) provides a single modal supporting both EVM and Solana chains. Users get one "Connect Wallet" button that lets them pick any wallet on either chain. The Solana signing path uses a thin adapter to bridge AppKit's provider to Aleph SDK's `MessageSigner` interface. Wagmi hooks still work under AppKit's WagmiAdapter for the Ethereum path.
+**Alternatives considered:** Keep separate modals (inconsistent UX), build custom Solana wallet picker (reinventing the wheel)
+
+## Decision #19 - 2026-02-04
+**Context:** Aleph API returns HTTP 422 with `{"status": "success", "hash": "..."}` for successful Solana store operations
+**Decision:** Check response JSON body status instead of only HTTP status code
+**Rationale:** The Aleph `api2.aleph.im` endpoint returns 422 for some successful operations. Checking `result.status === 'success'` in the response body is more reliable than `response.ok`. Applied to both ETH and SOL write paths for consistency.
+**Alternatives considered:** Ignore HTTP status entirely (too permissive), switch API server (api3 has worse issues)
+
 ## Decision #16 - 2026-02-03
 **Context:** Users need to find their past pastes
 **Decision:** localStorage-based per-wallet history with `#my-pasta` route

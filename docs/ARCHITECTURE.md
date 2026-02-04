@@ -8,7 +8,7 @@ Technical patterns and decisions.
 
 - **Framework:** Vite + React 18 + TypeScript
 - **Styling:** Tailwind CSS v4 + ShadCN/ui
-- **Wallet:** WalletConnect v2 + wagmi + viem (Ethereum), @solana/wallet-adapter-react (Solana)
+- **Wallet:** Reown AppKit + wagmi + viem (unified Ethereum + Solana modal)
 - **Storage:** Aleph SDK (@aleph-sdk/client, @aleph-sdk/ethereum, @aleph-sdk/evm, @aleph-sdk/solana)
 - **Ethereum:** ethers v5 (aliased as `ethers5`)
 
@@ -27,14 +27,13 @@ src/
 │   └── CelebrationBurst.tsx # One-shot emoji confetti burst (portal-based)
 ├── config/
 │   ├── aleph.ts         # Aleph constants (channel, gateway, chain ID)
-│   ├── wagmi.ts         # WalletConnect/wagmi configuration
-│   ├── solana.ts        # Solana network/endpoint configuration
+│   ├── appkit.ts        # Reown AppKit config (unified Ethereum + Solana modal)
 │   ├── floatingEmojis.ts # Floating emoji tuning (counts, opacity, sizes, speed)
 │   └── celebration.ts   # Celebration burst tuning (emojis, count, spread, duration)
 ├── services/
 │   ├── aleph-read.ts    # fetchPaste() — lightweight, no heavy deps
 │   ├── aleph-write.ts   # createPaste() — Aleph SDK + ethers5 (Ethereum path)
-│   ├── aleph-write-sol.ts # createPasteSolana() — Aleph SDK + Solana wallet adapter
+│   ├── aleph-write-sol.ts # createPasteSolana() — Aleph SDK + AppKit Solana provider
 │   ├── pasta-history.ts # localStorage CRUD for per-wallet paste history
 │   └── explorer-meta.ts # localStorage cache for Aleph Explorer link metadata
 ├── lib/
@@ -97,12 +96,12 @@ src/
 **Key files:** `src/index.css`, `src/components/CelebrationBurst.tsx`, `src/config/celebration.ts`, `src/components/Editor.tsx`, `src/components/Viewer.tsx`
 **Notes:** All animations respect `prefers-reduced-motion`. CelebrationBurst uses direct DOM manipulation (same pattern as FloatingEmojis) to avoid React reconciliation for transient particles. Bounce re-trigger uses React `key` prop to force remount. View switches use React keys on Editor/Viewer/PastaHistory to retrigger card-entrance on navigation. Timing vocabulary: 200ms (micro-interactions), 350-400ms (UI feedback), 800ms (card entrance), 1400ms (celebration burst).
 
-### Dual Wallet Support (Ethereum + Solana)
-**Date:** 2026-02-03
+### Unified Wallet Modal (Ethereum + Solana)
+**Date:** 2026-02-03, updated 2026-02-04
 **Context:** Aleph SDK supports multiple chains; users may prefer Solana wallets
-**Approach:** Parallel provider stacks — wagmi for Ethereum, `@solana/wallet-adapter-react` for Solana. Both wrapped at `main.tsx` level. Editor branches to `aleph-write.ts` (ETH) or `aleph-write-sol.ts` (SOL) via dynamic import. The Solana write path mirrors the ETH path but uses `SOLAccount` with `getAccountFromProvider()` and chain identifier `'SOL'` in the verification buffer.
-**Key files:** `src/main.tsx`, `src/config/solana.ts`, `src/services/aleph-write-sol.ts`, `src/components/Editor.tsx`, `src/App.tsx`
-**Notes:** No ALEPH token balance check on Solana path (ALEPH token is an Ethereum ERC-20). Solana chunk separated in `vite.config.ts` for independent caching.
+**Approach:** Reown AppKit with `WagmiAdapter` + `SolanaAdapter` provides a single "Connect Wallet" modal for both chains. Chain detection uses CAIP-10 address format (`eip155:1:0x...` = ETH, `solana:5eykt...:...` = SOL). Ethereum path still uses wagmi hooks under AppKit's adapter. Solana path uses `useAppKitProvider<Provider>('solana')` with a thin adapter bridging to Aleph SDK's `MessageSigner` interface (needs `publicKey`, `signMessage`, `connected`, `connect`).
+**Key files:** `src/config/appkit.ts`, `src/services/aleph-write-sol.ts`, `src/components/Editor.tsx`, `src/App.tsx`
+**Notes:** No ALEPH token balance check on Solana path (ALEPH token is an Ethereum ERC-20). `@solana/web3.js` still needed as transitive dep for Aleph SDK's `PublicKey` type.
 
 ### Pasta History (My Pasta)
 **Date:** 2026-02-03

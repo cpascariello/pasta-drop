@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAccount } from 'wagmi';
-import { useWeb3Modal } from '@web3modal/wagmi/react';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
+import type { Provider } from '@reown/appkit-adapter-solana';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,7 +11,6 @@ import { CelebrationBurst } from '@/components/CelebrationBurst';
 import { addToHistory } from '@/services/pasta-history';
 import { storeExplorerMeta } from '@/services/explorer-meta';
 import type { WalletProvider, PasteResult } from '@/services/aleph-write';
-import type { SolanaWallet } from '@/services/aleph-write-sol';
 
 interface EditorProps {
   onPasteCreated: (hash: string) => void;
@@ -26,15 +25,19 @@ export function Editor({ onPasteCreated }: EditorProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const mountedRef = useRef(true);
 
-  // Ethereum wallet (wagmi)
-  const { isConnected: ethConnected, connector } = useAccount();
-  const { open: openEthModal } = useWeb3Modal();
+  // Unified wallet state from AppKit
+  const { open } = useAppKit();
+  const { isConnected, caipAddress } = useAppKitAccount();
 
-  // Solana wallet
-  const solWallet = useWallet();
-  const solConnected = solWallet.connected && !!solWallet.publicKey;
+  // Ethereum: wagmi hooks still work under AppKit's WagmiAdapter
+  const { connector } = useAccount();
 
-  const isConnected = ethConnected || solConnected;
+  // Solana: AppKit provider for signMessage
+  const { walletProvider: solanaProvider } = useAppKitProvider<Provider>('solana');
+
+  // Detect which chain is connected from the CAIP address
+  const isSolana = caipAddress?.startsWith('solana:') ?? false;
+  const isEthereum = caipAddress?.startsWith('eip155:') ?? false;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -45,7 +48,7 @@ export function Editor({ onPasteCreated }: EditorProps) {
 
   // Wallet-to-Aleph handoff:
   // - Ethereum: connector.getProvider() → EIP-1193 provider → aleph-write.ts
-  // - Solana: useWallet() → signMessage adapter → aleph-write-sol.ts
+  // - Solana: AppKit provider → signMessage adapter → aleph-write-sol.ts
   // Both paths are dynamically imported for code splitting.
   const handleCreate = async () => {
     if (!text.trim()) {
@@ -65,7 +68,7 @@ export function Editor({ onPasteCreated }: EditorProps) {
     try {
       let result: PasteResult;
 
-      if (ethConnected && connector) {
+      if (isEthereum && connector) {
         // Ethereum path
         const provider = await connector.getProvider() as WalletProvider;
         const { createPaste, WrongChainError } = await import('@/services/aleph-write');
@@ -78,10 +81,11 @@ export function Editor({ onPasteCreated }: EditorProps) {
           }
           throw err;
         }
-      } else if (solConnected) {
-        // Solana path
+      } else if (isSolana && solanaProvider) {
+        // Solana path — extract address from CAIP string
+        const solAddress = caipAddress!.split(':')[2];
         const { createPasteSolana } = await import('@/services/aleph-write-sol');
-        result = await createPasteSolana(solWallet as SolanaWallet, text);
+        result = await createPasteSolana(solanaProvider, solAddress, text);
       } else {
         throw new Error('No wallet connected');
       }
@@ -165,14 +169,9 @@ export function Editor({ onPasteCreated }: EditorProps) {
             {isLoading ? status || 'Al dente...' : 'Al dente'}
           </Button>
         ) : (
-          <div className="flex gap-2">
-            <Button onClick={() => openEthModal()}>
-              Connect Ethereum
-            </Button>
-            <Button variant="outline" onClick={() => solWallet.select?.('Phantom' as never)}>
-              Connect Solana
-            </Button>
-          </div>
+          <Button onClick={() => open()}>
+            Connect Wallet
+          </Button>
         )}
       </CardFooter>
       {burst && <CelebrationBurst origin={burst} onComplete={clearBurst} />}

@@ -6,18 +6,28 @@
 // same — only the chain identifier and signing mechanism differ.
 
 import { getAccountFromProvider } from '@aleph-sdk/solana';
+import { PublicKey } from '@solana/web3.js';
 import { ALEPH_API_SERVER, ALEPH_CHANNEL } from '../config/aleph';
 import type { PasteResult } from './aleph-write';
 
 /**
- * Solana wallet interface matching what @solana/wallet-adapter-react provides.
- * This is the MessageSigner interface that @aleph-sdk/solana expects.
+ * Minimal Solana signer interface expected by @aleph-sdk/solana's
+ * getAccountFromProvider. Bridges AppKit's Solana Provider to the
+ * MessageSigner shape the Aleph SDK needs.
  */
-export interface SolanaWallet {
-  publicKey: { toBase58(): string; toBytes(): Uint8Array };
+interface AlephMessageSigner {
+  publicKey: PublicKey;
   signMessage(message: Uint8Array): Promise<Uint8Array>;
   connected: boolean;
   connect(): Promise<void>;
+}
+
+/**
+ * AppKit Solana provider shape (subset of what we actually use).
+ */
+export interface SolanaProvider {
+  publicKey?: { toBase58(): string };
+  signMessage(message: Uint8Array): Promise<Uint8Array>;
 }
 
 /**
@@ -31,21 +41,28 @@ async function sha256Hex(data: Uint8Array): Promise<string> {
 
 /**
  * Create a paste using a Solana wallet and store it on Aleph.
+ * Accepts AppKit's Solana provider and the wallet address string.
  * Returns a PasteResult with file hash and explorer metadata.
  */
 export async function createPasteSolana(
-  wallet: SolanaWallet,
+  provider: SolanaProvider,
+  address: string,
   text: string
 ): Promise<PasteResult> {
-  if (!wallet.connected || !wallet.publicKey) {
+  if (!address) {
     throw new Error('Solana wallet not connected');
   }
 
-  const senderAddress = wallet.publicKey.toBase58();
+  // Bridge AppKit provider to the MessageSigner interface Aleph expects
+  const messageSigner: AlephMessageSigner = {
+    publicKey: new PublicKey(address),
+    signMessage: (msg: Uint8Array) => provider.signMessage(msg),
+    connected: true,
+    connect: async () => {},
+  };
 
-  // Create Aleph SOLAccount from the wallet provider.
-  // getAccountFromProvider wraps the wallet's signMessage for Aleph signing.
-  const account = await getAccountFromProvider(wallet as Parameters<typeof getAccountFromProvider>[0]);
+  // Create Aleph SOLAccount from the adapted signer
+  const account = await getAccountFromProvider(messageSigner as Parameters<typeof getAccountFromProvider>[0]);
 
   // Encode text and compute file hash
   const fileBytes = new TextEncoder().encode(text);
@@ -54,7 +71,7 @@ export async function createPasteSolana(
   // Build item_content — same structure as Ethereum, different chain
   const time = Date.now() / 1000;
   const itemContent = {
-    address: senderAddress,
+    address,
     item_type: 'storage',
     item_hash: fileHash,
     time,
@@ -66,21 +83,20 @@ export async function createPasteSolana(
   const itemHash = await sha256Hex(itemContentBytes);
 
   // Sign the message.
-  // Verification buffer format is the same: [chain, sender, type, item_hash].join('\n')
-  // but with 'SOL' instead of 'ETH'.
+  // Verification buffer format: [chain, sender, type, item_hash].join('\n')
   const { Buffer } = await import('buffer');
   const signable = {
     time,
-    sender: senderAddress,
+    sender: address,
     getVerificationBuffer: () =>
-      Buffer.from(['SOL', senderAddress, 'STORE', itemHash].join('\n')),
+      Buffer.from(['SOL', address, 'STORE', itemHash].join('\n')),
   };
   const signature = await account.sign(signable);
 
   // Assemble the full Aleph message — chain is 'SOL'
   const message = {
     chain: 'SOL',
-    sender: senderAddress,
+    sender: address,
     channel: ALEPH_CHANNEL,
     time,
     item_type: 'inline',
@@ -103,16 +119,15 @@ export async function createPasteSolana(
     body: formData,
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Aleph API error (${response.status}): ${errorText}`);
-  }
-
+  // Aleph API may return 422 with a success body — parse JSON first
   const result = await response.json();
+  if (!response.ok && result?.status !== 'success') {
+    throw new Error(`Aleph API error (${response.status}): ${JSON.stringify(result)}`);
+  }
   return {
     fileHash: result.hash ?? fileHash,
     itemHash,
-    sender: senderAddress,
+    sender: address,
     chain: 'SOL',
   };
 }

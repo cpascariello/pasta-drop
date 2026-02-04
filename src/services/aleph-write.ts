@@ -211,12 +211,11 @@ export async function createPaste(
     body: formData,
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Aleph API error (${response.status}): ${errorText}`);
-  }
-
+  // Aleph API may return 422 with a success body — parse JSON first
   const result = await response.json();
+  if (!response.ok && result?.status !== 'success') {
+    throw new Error(`Aleph API error (${response.status}): ${JSON.stringify(result)}`);
+  }
   return {
     fileHash: result.hash ?? fileHash,
     itemHash,
