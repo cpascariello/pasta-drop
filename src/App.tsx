@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAccount, useDisconnect } from 'wagmi';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { Editor } from '@/components/Editor';
 import { Viewer } from '@/components/Viewer';
 import { FloatingEmojis } from '@/components/FloatingEmojis';
@@ -32,18 +33,32 @@ function App() {
     window.location.hash = '';
   };
 
-  const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
+  // Ethereum wallet state
+  const { address: ethAddress, isConnected: ethConnected } = useAccount();
+  const { disconnect: ethDisconnect } = useDisconnect();
+
+  // Solana wallet state
+  const { publicKey: solPublicKey, connected: solConnected, disconnect: solDisconnect } = useWallet();
+  const solAddress = solPublicKey?.toBase58();
+
+  const isConnected = ethConnected || solConnected;
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative">
       <FloatingEmojis />
 
       {isConnected && (
-        <div className="fixed top-4 right-4 z-20">
-          <Button variant="outline" size="sm" onClick={() => disconnect()}>
-            {address?.slice(0, 6)}...{address?.slice(-4)}
-          </Button>
+        <div className="fixed top-4 right-4 z-20 flex gap-2">
+          {ethConnected && (
+            <Button variant="outline" size="sm" onClick={() => ethDisconnect()}>
+              {ethAddress?.slice(0, 6)}...{ethAddress?.slice(-4)}
+            </Button>
+          )}
+          {solConnected && solAddress && (
+            <Button variant="outline" size="sm" onClick={() => solDisconnect()}>
+              {solAddress.slice(0, 4)}...{solAddress.slice(-4)}
+            </Button>
+          )}
         </div>
       )}
 
