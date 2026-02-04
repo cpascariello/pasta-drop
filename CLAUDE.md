@@ -141,6 +141,7 @@ npm run lint     # Run ESLint
 | `src/services/aleph-write.ts` | `createPaste()` — Aleph SDK + ethers5 (Ethereum) |
 | `src/services/aleph-write-sol.ts` | `createPasteSolana()` — Aleph SDK + Solana adapter |
 | `src/services/pasta-history.ts` | localStorage CRUD for per-wallet paste history |
+| `src/services/explorer-meta.ts` | localStorage cache for Aleph Explorer link metadata |
 | `src/components/PastaHistory.tsx` | My Pasta history list component |
 | `src/config/wagmi.ts` | WalletConnect configuration |
 | `src/config/solana.ts` | Solana network/endpoint configuration |
@@ -158,9 +159,10 @@ npm run lint     # Run ESLint
 
 See `docs/plans/BRANDING.md` for full microcopy guide. Key terms:
 - "Al dente" = Create/Submit
-- "Mangia!" = Copy link
-- "Buon appetito!" = View header
+- "Share your bolo" = Copy link
+- "Pasta Served" = View header
 - "A tavola!" = Success
+- "Drop another" = New paste
 
 ### Before Deploying
 

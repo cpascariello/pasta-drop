@@ -35,7 +35,8 @@ src/
 │   ├── aleph-read.ts    # fetchPaste() — lightweight, no heavy deps
 │   ├── aleph-write.ts   # createPaste() — Aleph SDK + ethers5 (Ethereum path)
 │   ├── aleph-write-sol.ts # createPasteSolana() — Aleph SDK + Solana wallet adapter
-│   └── pasta-history.ts # localStorage CRUD for per-wallet paste history
+│   ├── pasta-history.ts # localStorage CRUD for per-wallet paste history
+│   └── explorer-meta.ts # localStorage cache for Aleph Explorer link metadata
 ├── lib/
 │   └── utils.ts         # ShadCN cn() utility
 ├── App.tsx              # Hash-based routing
@@ -94,7 +95,7 @@ src/
 **Context:** Adding polish animations — card entrance, textarea focus, copy button bounce, celebration burst
 **Approach:** Animation responsibilities stratified by type: CSS keyframes for one-shot feedback (card-entrance, button-bounce), CSS transitions for state-driven effects (textarea focus glow), imperative DOM + `createPortal` for transient particle effects (CelebrationBurst). All keyframes and animation classes live in `index.css`. Config constants extracted to `src/config/celebration.ts`.
 **Key files:** `src/index.css`, `src/components/CelebrationBurst.tsx`, `src/config/celebration.ts`, `src/components/Editor.tsx`, `src/components/Viewer.tsx`
-**Notes:** All animations respect `prefers-reduced-motion`. CelebrationBurst uses direct DOM manipulation (same pattern as FloatingEmojis) to avoid React reconciliation for transient particles. Bounce re-trigger uses React `key` prop to force remount. Timing vocabulary: 200ms (micro-interactions), 350-400ms (UI feedback), 700ms (spectacle).
+**Notes:** All animations respect `prefers-reduced-motion`. CelebrationBurst uses direct DOM manipulation (same pattern as FloatingEmojis) to avoid React reconciliation for transient particles. Bounce re-trigger uses React `key` prop to force remount. View switches use React keys on Editor/Viewer/PastaHistory to retrigger card-entrance on navigation. Timing vocabulary: 200ms (micro-interactions), 350-400ms (UI feedback), 800ms (card entrance), 1400ms (celebration burst).
 
 ### Dual Wallet Support (Ethereum + Solana)
 **Date:** 2026-02-03

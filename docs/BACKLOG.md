@@ -43,13 +43,13 @@ Completed in performance + polish pass. Portal-based emoji confetti burst from b
 Completed in performance + polish pass. Squish-overshoot-settle bounce on Mangia! click via CSS keyframes.
 
 ### 2026-02-03 - Card Entrance Animation ✓
-Completed in performance + polish pass. Fade + slide-up (400ms expo-out) on mount.
+Completed in performance + polish pass. Fade + slide-up (800ms expo-out) on mount, retriggered on view switches via React keys.
 
 ### 2026-02-03 - Code Splitting for Web3 Libraries ✓
 Completed in performance + polish pass. Split aleph.ts into read/write, manual chunks in Vite. Main chunk: 3,608 KB → 224 KB.
 
 ### 2026-02-03 - Hash Link to Aleph Explorer ✓
-Completed. Viewer hash display is now a clickable link to `{ALEPH_GATEWAY}/storage/raw/{hash}`.
+Completed. Viewer hash display links to `explorer.aleph.cloud/address/{chain}/{sender}/message/STORE/{itemHash}` when metadata is available, falls back to gateway raw URL for shared links.
 
 ### 2026-02-03 - Mobile Touch Repulsion for Floating Emojis ✓
 Completed. Added `touchmove`/`touchend` handlers with `{ passive: true }` to FloatingEmojis.
