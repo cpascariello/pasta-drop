@@ -67,7 +67,7 @@ export function Viewer({ hash, onNewPaste }: ViewerProps) {
     <Card className="w-full max-w-3xl card-entrance">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Buon appetito!</span>
+          <span className="-rotate-1" style={{ fontFamily: '"Erica One", cursive' }}>Pasta Served</span>
           <a
             href={(() => {
               const meta = getExplorerMeta(hash);
@@ -101,10 +101,10 @@ export function Viewer({ hash, onNewPaste }: ViewerProps) {
       </CardContent>
       <CardFooter className="flex gap-2">
         <Button key={bounceKey} variant="outline" onClick={copyLink} className={`flex-1 ${bounceKey > 0 ? 'button-bounce' : ''}`}>
-          {copied ? 'Perfetto!' : 'Mangia!'}
+          {copied ? 'Copied!' : 'Copy link'}
         </Button>
         <Button onClick={onNewPaste} className="flex-1">
-          Cook your own
+          Drop another
         </Button>
       </CardFooter>
     </Card>

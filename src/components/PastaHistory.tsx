@@ -1,6 +1,6 @@
 // src/components/PastaHistory.tsx
 
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getHistory, removeFromHistory, type PastaEntry } from '@/services/pasta-history';
@@ -14,16 +14,33 @@ interface PastaHistoryProps {
 
 export function PastaHistory({ chain, address, onViewPaste, onNewPaste }: PastaHistoryProps) {
   const [entries, setEntries] = useState<PastaEntry[]>(() => getHistory(chain, address));
+  const [copiedHash, setCopiedHash] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const deleteTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const handleDelete = (hash: string) => {
-    removeFromHistory(chain, address, hash);
-    setEntries(getHistory(chain, address));
-  };
+  const handleDelete = useCallback((hash: string) => {
+    if (confirmDelete === hash) {
+      // Second click — actually delete
+      clearTimeout(deleteTimerRef.current);
+      removeFromHistory(chain, address, hash);
+      setEntries(getHistory(chain, address));
+      setConfirmDelete(null);
+    } else {
+      // First click — show confirmation
+      setConfirmDelete(hash);
+      clearTimeout(deleteTimerRef.current);
+      deleteTimerRef.current = setTimeout(() => setConfirmDelete(null), 3000);
+    }
+  }, [chain, address, confirmDelete]);
 
-  const handleCopyLink = (hash: string) => {
+  const handleCopyLink = useCallback((hash: string) => {
     const url = `${window.location.origin}${window.location.pathname}#${hash}`;
     navigator.clipboard.writeText(url).catch(() => {});
-  };
+    setCopiedHash(hash);
+    clearTimeout(copiedTimerRef.current);
+    copiedTimerRef.current = setTimeout(() => setCopiedHash(null), 2000);
+  }, []);
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString(undefined, {
@@ -74,16 +91,17 @@ export function PastaHistory({ chain, address, onViewPaste, onNewPaste }: PastaH
                     variant="outline"
                     size="sm"
                     onClick={() => handleCopyLink(entry.hash)}
+                    className={copiedHash === entry.hash ? 'button-bounce' : ''}
                   >
-                    Share
+                    {copiedHash === entry.hash ? 'Copied!' : 'Share'}
                   </Button>
                   <Button
-                    variant="outline"
+                    variant={confirmDelete === entry.hash ? 'destructive' : 'outline'}
                     size="sm"
                     onClick={() => handleDelete(entry.hash)}
-                    className="text-destructive hover:text-destructive"
+                    className={confirmDelete !== entry.hash ? 'text-destructive hover:text-destructive' : ''}
                   >
-                    ×
+                    {confirmDelete === entry.hash ? 'Sure?' : '×'}
                   </Button>
                 </div>
               </li>
@@ -93,7 +111,7 @@ export function PastaHistory({ chain, address, onViewPaste, onNewPaste }: PastaH
       </CardContent>
       <CardFooter className="justify-end">
         <Button onClick={onNewPaste}>
-          Cook your own
+          Drop another
         </Button>
       </CardFooter>
     </Card>

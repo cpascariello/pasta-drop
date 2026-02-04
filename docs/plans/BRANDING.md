@@ -24,15 +24,15 @@
 | Create button | "Al dente" |
 | Loading state | "Al dente..." |
 | Success state | "A tavola!" |
-| Copy/share button | "Mangia!" |
-| Copied confirmation | "Perfetto!" |
+| Copy/share button | "Copy link" |
+| Copied confirmation | "Copied!" |
 
 ### Viewer Page
 
 | Element | Text |
 |---------|------|
-| Header/greeting | "Buon appetito!" |
-| New paste button | "Cook your own" |
+| Header/greeting | "Pasta Served" |
+| New paste button | "Drop another" |
 
 ### Error States
 

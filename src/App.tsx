@@ -61,29 +61,26 @@ function App() {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative">
       <FloatingEmojis />
 
-      {isConnected && (
-        <div className="fixed top-4 right-4 z-20 flex gap-2">
-          {activeChain && activeAddress && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => { window.location.hash = 'my-pasta'; }}
-            >
-              My Pasta
-            </Button>
-          )}
-          {ethConnected && (
-            <Button variant="outline" size="sm" onClick={() => ethDisconnect()}>
-              {ethAddress?.slice(0, 6)}...{ethAddress?.slice(-4)}
-            </Button>
-          )}
-          {solConnected && solAddress && (
-            <Button variant="outline" size="sm" onClick={() => solDisconnect()}>
-              {solAddress.slice(0, 4)}...{solAddress.slice(-4)}
-            </Button>
-          )}
-        </div>
-      )}
+      <div className="fixed top-4 right-4 z-20 flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!isConnected}
+          onClick={() => { window.location.hash = 'my-pasta'; }}
+        >
+          My Pasta
+        </Button>
+        {ethConnected && (
+          <Button variant="outline" size="sm" onClick={() => ethDisconnect()}>
+            {ethAddress?.slice(0, 6)}...{ethAddress?.slice(-4)} ✕
+          </Button>
+        )}
+        {solConnected && solAddress && (
+          <Button variant="outline" size="sm" onClick={() => solDisconnect()}>
+            {solAddress.slice(0, 4)}...{solAddress.slice(-4)} ✕
+          </Button>
+        )}
+      </div>
 
       <header className="mt-8 mb-10 text-center relative z-10">
         <h1 className="text-9xl mb-3 -translate-x-16 -rotate-2" style={{ fontFamily: '"Erica One", cursive' }}>Pasta Drop</h1>
