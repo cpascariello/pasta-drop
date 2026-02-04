@@ -203,7 +203,7 @@
 }
 
 .card-entrance {
-  animation: card-entrance 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: card-entrance 800ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Textarea focus glow + subtle breathe */

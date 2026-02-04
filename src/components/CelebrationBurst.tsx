@@ -46,7 +46,9 @@ export function CelebrationBurst({ origin, onComplete }: CelebrationBurstProps) 
       span.style.pointerEvents = 'none';
       span.style.zIndex = '9999';
       span.style.willChange = 'transform, opacity';
-      span.style.transition = `transform ${duration}ms cubic-bezier(0.0, 0.8, 0.2, 1.0), opacity ${duration * 0.5}ms ease ${duration * 0.3}ms`;
+      // Particles launch fast then decelerate (ease-out). Opacity holds fully
+      // visible for the first 60%, then fades to 0 over the remaining 40%.
+      span.style.transition = `transform ${duration}ms cubic-bezier(0.0, 0.6, 0.15, 1.0), opacity ${duration * 0.4}ms ease-in ${duration * 0.6}ms`;
       span.style.transform = 'translate(-50%, -50%) scale(0.3)';
       span.style.opacity = '1';
 

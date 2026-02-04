@@ -8,7 +8,7 @@ export const CELEBRATION = {
   /** Max distance particles travel from origin (px) */
   spreadRadius: 100,
   /** Total animation duration (ms) */
-  duration: 700,
+  duration: 1400,
   /** Particle font size range (px) */
   sizeMin: 18,
   sizeMax: 30,
