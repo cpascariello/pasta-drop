@@ -68,7 +68,8 @@ Aleph uses a hold-to-use model: each ALEPH token held on Ethereum mainnet grants
 | Path | Dependencies | Auth Required |
 |------|-------------|---------------|
 | **Read** (`aleph-read.ts`) | `fetch()` only | No |
-| **Write** (`aleph-write.ts`) | Aleph SDK + ethers5 | Wallet signature |
+| **Write ETH** (`aleph-write.ts`) | Aleph SDK + ethers5 | Ethereum wallet |
+| **Write SOL** (`aleph-write-sol.ts`) | Aleph SDK + @solana/wallet-adapter | Solana wallet |
 
 The write path is loaded via dynamic `import()` only when the user creates a paste, keeping the initial bundle small.
 
@@ -83,9 +84,10 @@ We bypass the Aleph SDK's `createStore()` and construct messages manually. This 
 | Create button | "Al dente" |
 | Loading | "Al dente..." |
 | Success | "A tavola!" |
-| Copy link | "Mangia!" |
-| Copied | "Perfetto!" |
-| New paste | "Cook your own" |
+| Copy link | "Share your bolo" |
+| Copied | "Copied!" |
+| Viewer header | "Pasta Served" |
+| New paste | "Drop another" |
 
 ## Tech Stack
 
