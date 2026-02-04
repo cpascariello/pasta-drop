@@ -7,6 +7,7 @@
 
 import { getAccountFromProvider } from '@aleph-sdk/solana';
 import { ALEPH_API_SERVER, ALEPH_CHANNEL } from '../config/aleph';
+import type { PasteResult } from './aleph-write';
 
 /**
  * Solana wallet interface matching what @solana/wallet-adapter-react provides.
@@ -30,12 +31,12 @@ async function sha256Hex(data: Uint8Array): Promise<string> {
 
 /**
  * Create a paste using a Solana wallet and store it on Aleph.
- * Returns the file content hash for the viewer URL.
+ * Returns a PasteResult with file hash and explorer metadata.
  */
 export async function createPasteSolana(
   wallet: SolanaWallet,
   text: string
-): Promise<string> {
+): Promise<PasteResult> {
   if (!wallet.connected || !wallet.publicKey) {
     throw new Error('Solana wallet not connected');
   }
@@ -108,5 +109,10 @@ export async function createPasteSolana(
   }
 
   const result = await response.json();
-  return result.hash ?? fileHash;
+  return {
+    fileHash: result.hash ?? fileHash,
+    itemHash,
+    sender: senderAddress,
+    chain: 'SOL',
+  };
 }

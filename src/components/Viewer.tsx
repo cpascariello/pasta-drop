@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { fetchPaste } from '@/services/aleph-read';
-import { ALEPH_GATEWAY } from '@/config/aleph';
+import { ALEPH_EXPLORER_URL, ALEPH_GATEWAY } from '@/config/aleph';
+import { getExplorerMeta } from '@/services/explorer-meta';
 
 interface ViewerProps {
   hash: string;
@@ -68,7 +69,13 @@ export function Viewer({ hash, onNewPaste }: ViewerProps) {
         <CardTitle className="flex items-center justify-between">
           <span>Buon appetito!</span>
           <a
-            href={`${ALEPH_GATEWAY}/storage/raw/${hash}`}
+            href={(() => {
+              const meta = getExplorerMeta(hash);
+              if (meta) {
+                return `${ALEPH_EXPLORER_URL}/address/${meta.chain}/${meta.sender}/message/STORE/${meta.itemHash}`;
+              }
+              return `${ALEPH_GATEWAY}/storage/raw/${hash}`;
+            })()}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-mono text-muted-foreground underline hover:text-foreground transition-colors"

@@ -51,9 +51,24 @@ async function sha256Hex(data: Uint8Array): Promise<string> {
 }
 
 /**
+ * Result of a paste creation — includes the file hash for the gateway
+ * and metadata needed to construct the Aleph Explorer link.
+ */
+export interface PasteResult {
+  /** SHA-256 of file bytes — gateway serves at /storage/raw/{fileHash} */
+  fileHash: string;
+  /** SHA-256 of item_content JSON — the message's item_hash on Aleph */
+  itemHash: string;
+  /** Wallet address that signed the message */
+  sender: string;
+  /** Blockchain used for signing */
+  chain: 'ETH' | 'SOL';
+}
+
+/**
  * Create a paste and store it on the Aleph network.
- * Returns the file content hash — used by the gateway to serve the raw file
- * at: {ALEPH_GATEWAY}/storage/raw/{hash}
+ * Returns a PasteResult with both the file hash (for viewing) and the
+ * message metadata (for the Aleph Explorer link).
  *
  * Flow:
  *   1. Verify Ethereum mainnet
@@ -68,7 +83,7 @@ async function sha256Hex(data: Uint8Array): Promise<string> {
 export async function createPaste(
   provider: WalletProvider,
   text: string
-): Promise<string> {
+): Promise<PasteResult> {
   // Step 1: Verify user is on Ethereum mainnet.
   // Aleph messages are anchored to a specific blockchain. Our messages use
   // chain: 'ETH', so the wallet must be on mainnet (chainId 0x1).
@@ -202,7 +217,10 @@ export async function createPaste(
   }
 
   const result = await response.json();
-  // Return the file content hash (not the message item_hash).
-  // The gateway serves raw files at /storage/raw/{fileHash}.
-  return result.hash ?? fileHash;
+  return {
+    fileHash: result.hash ?? fileHash,
+    itemHash,
+    sender: wallet.address,
+    chain: 'ETH',
+  };
 }

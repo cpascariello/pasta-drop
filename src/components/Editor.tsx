@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { CelebrationBurst } from '@/components/CelebrationBurst';
 import { addToHistory } from '@/services/pasta-history';
-import type { WalletProvider } from '@/services/aleph-write';
+import { storeExplorerMeta } from '@/services/explorer-meta';
+import type { WalletProvider, PasteResult } from '@/services/aleph-write';
 import type { SolanaWallet } from '@/services/aleph-write-sol';
 
 interface EditorProps {
@@ -26,7 +27,7 @@ export function Editor({ onPasteCreated }: EditorProps) {
   const mountedRef = useRef(true);
 
   // Ethereum wallet (wagmi)
-  const { isConnected: ethConnected, address: ethAddress, connector } = useAccount();
+  const { isConnected: ethConnected, connector } = useAccount();
   const { open: openEthModal } = useWeb3Modal();
 
   // Solana wallet
@@ -62,14 +63,14 @@ export function Editor({ onPasteCreated }: EditorProps) {
     setStatus('Al dente...');
 
     try {
-      let hash: string;
+      let result: PasteResult;
 
       if (ethConnected && connector) {
         // Ethereum path
         const provider = await connector.getProvider() as WalletProvider;
         const { createPaste, WrongChainError } = await import('@/services/aleph-write');
         try {
-          hash = await createPaste(provider, text);
+          result = await createPaste(provider, text);
         } catch (err: unknown) {
           if (!mountedRef.current) return;
           if (err instanceof WrongChainError) {
@@ -80,21 +81,26 @@ export function Editor({ onPasteCreated }: EditorProps) {
       } else if (solConnected) {
         // Solana path
         const { createPasteSolana } = await import('@/services/aleph-write-sol');
-        hash = await createPasteSolana(solWallet as SolanaWallet, text);
+        result = await createPasteSolana(solWallet as SolanaWallet, text);
       } else {
         throw new Error('No wallet connected');
       }
 
       if (!mountedRef.current) return;
 
+      // Store explorer metadata so the Viewer can link to the Aleph Explorer
+      storeExplorerMeta(result.fileHash, {
+        itemHash: result.itemHash,
+        sender: result.sender,
+        chain: result.chain,
+      });
+
       // Save to local history for "My Pasta" view
-      const chain = ethConnected ? 'ETH' : 'SOL';
-      const address = ethConnected ? ethAddress! : solWallet.publicKey!.toBase58();
-      addToHistory(chain, address, {
-        hash,
+      addToHistory(result.chain, result.sender, {
+        hash: result.fileHash,
         preview: text.slice(0, 80),
         createdAt: Date.now(),
-        chain: chain as 'ETH' | 'SOL',
+        chain: result.chain,
       });
 
       setStatus('A tavola!');
@@ -106,7 +112,7 @@ export function Editor({ onPasteCreated }: EditorProps) {
       // Brief pause to show success state + burst
       await new Promise(resolve => setTimeout(resolve, 800));
       if (!mountedRef.current) return;
-      onPasteCreated(hash);
+      onPasteCreated(result.fileHash);
     } catch (err: unknown) {
       if (!mountedRef.current) return;
       setStatus(null);
