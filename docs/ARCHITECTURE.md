@@ -8,8 +8,8 @@ Technical patterns and decisions.
 
 - **Framework:** Vite + React 18 + TypeScript
 - **Styling:** Tailwind CSS v4 + ShadCN/ui
-- **Wallet:** WalletConnect v2 + wagmi + viem
-- **Storage:** Aleph SDK (@aleph-sdk/client, @aleph-sdk/ethereum, @aleph-sdk/evm)
+- **Wallet:** WalletConnect v2 + wagmi + viem (Ethereum), @solana/wallet-adapter-react (Solana)
+- **Storage:** Aleph SDK (@aleph-sdk/client, @aleph-sdk/ethereum, @aleph-sdk/evm, @aleph-sdk/solana)
 - **Ethereum:** ethers v5 (aliased as `ethers5`)
 
 ---
@@ -20,18 +20,22 @@ Technical patterns and decisions.
 src/
 ├── components/
 │   ├── ui/              # ShadCN components (Button, Card, Textarea)
-│   ├── Editor.tsx       # Paste creation view
+│   ├── Editor.tsx       # Paste creation view (dual wallet support)
 │   ├── Viewer.tsx       # Paste viewing view
+│   ├── PastaHistory.tsx # Per-wallet paste history list
 │   ├── FloatingEmojis.tsx # Ambient floating spaghetti background
 │   └── CelebrationBurst.tsx # One-shot emoji confetti burst (portal-based)
 ├── config/
 │   ├── aleph.ts         # Aleph constants (channel, gateway, chain ID)
 │   ├── wagmi.ts         # WalletConnect/wagmi configuration
+│   ├── solana.ts        # Solana network/endpoint configuration
 │   ├── floatingEmojis.ts # Floating emoji tuning (counts, opacity, sizes, speed)
 │   └── celebration.ts   # Celebration burst tuning (emojis, count, spread, duration)
 ├── services/
 │   ├── aleph-read.ts    # fetchPaste() — lightweight, no heavy deps
-│   └── aleph-write.ts   # createPaste() — pulls Aleph SDK + ethers5
+│   ├── aleph-write.ts   # createPaste() — Aleph SDK + ethers5 (Ethereum path)
+│   ├── aleph-write-sol.ts # createPasteSolana() — Aleph SDK + Solana wallet adapter
+│   └── pasta-history.ts # localStorage CRUD for per-wallet paste history
 ├── lib/
 │   └── utils.ts         # ShadCN cn() utility
 ├── App.tsx              # Hash-based routing
@@ -91,3 +95,17 @@ src/
 **Approach:** Animation responsibilities stratified by type: CSS keyframes for one-shot feedback (card-entrance, button-bounce), CSS transitions for state-driven effects (textarea focus glow), imperative DOM + `createPortal` for transient particle effects (CelebrationBurst). All keyframes and animation classes live in `index.css`. Config constants extracted to `src/config/celebration.ts`.
 **Key files:** `src/index.css`, `src/components/CelebrationBurst.tsx`, `src/config/celebration.ts`, `src/components/Editor.tsx`, `src/components/Viewer.tsx`
 **Notes:** All animations respect `prefers-reduced-motion`. CelebrationBurst uses direct DOM manipulation (same pattern as FloatingEmojis) to avoid React reconciliation for transient particles. Bounce re-trigger uses React `key` prop to force remount. Timing vocabulary: 200ms (micro-interactions), 350-400ms (UI feedback), 700ms (spectacle).
+
+### Dual Wallet Support (Ethereum + Solana)
+**Date:** 2026-02-03
+**Context:** Aleph SDK supports multiple chains; users may prefer Solana wallets
+**Approach:** Parallel provider stacks — wagmi for Ethereum, `@solana/wallet-adapter-react` for Solana. Both wrapped at `main.tsx` level. Editor branches to `aleph-write.ts` (ETH) or `aleph-write-sol.ts` (SOL) via dynamic import. The Solana write path mirrors the ETH path but uses `SOLAccount` with `getAccountFromProvider()` and chain identifier `'SOL'` in the verification buffer.
+**Key files:** `src/main.tsx`, `src/config/solana.ts`, `src/services/aleph-write-sol.ts`, `src/components/Editor.tsx`, `src/App.tsx`
+**Notes:** No ALEPH token balance check on Solana path (ALEPH token is an Ethereum ERC-20). Solana chunk separated in `vite.config.ts` for independent caching.
+
+### Pasta History (My Pasta)
+**Date:** 2026-02-03
+**Context:** Users need to find their past pastes without bookmarking every link
+**Approach:** localStorage-based history keyed by `pasta-history:{chain}:{address}`. After paste creation, Editor saves metadata (hash, preview, timestamp, chain). `PastaHistory` component renders the list with view/share/delete actions. Routed via `#my-pasta` hash.
+**Key files:** `src/services/pasta-history.ts`, `src/components/PastaHistory.tsx`, `src/components/Editor.tsx`, `src/App.tsx`
+**Notes:** Only metadata is stored locally — actual paste content stays on Aleph. "Delete" only removes from local history. Capped at 50 entries per wallet.

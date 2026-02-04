@@ -15,35 +15,7 @@ Ideas and scope creep captured for later consideration.
 
 ## Open Items
 
-### 2026-01-29 - My Pasta + Save/Share Separation
-**Source:** Brainstorming session
-**Description:** Add a "My Pasta" history view per wallet. Separate save (private) vs share (public link) actions. Delete option from history.
-**Priority:** Medium
-
-### 2026-01-29 - Solana Wallet Support
-**Source:** Original plan (Aleph SDK supports Solana)
-**Description:** Add Solana wallet connection alongside Ethereum. The Aleph SDK already supports `@aleph-sdk/solana`.
-**Priority:** Low
-
-### 2026-02-03 - Slow Gradient Background Shift
-**Source:** Brainstorming spaghetti animations
-**Description:** Very slow, barely perceptible background color cycling. Gives the page a living feel.
-**Priority:** Low
-
-### 2026-02-03 - Elaborate Aleph-Focused Inline Comments
-**Source:** Cookbook documentation review
-**Description:** Add detailed inline comments focused on teaching Aleph Cloud integration. Key areas: src/services/aleph-write.ts (expand Store vs POST explanation, link to Aleph SDK docs), src/config/aleph.ts (link to docs for channel/gateway concepts), src/components/Editor.tsx (explain wallet-to-Aleph handoff). Add a "How Aleph Storage Works" section to the README. Other tools (wagmi, React, physics) don't need additional commentary.
-**Priority:** Medium
-
-### 2026-02-03 - Hash Link to Aleph Explorer
-**Source:** Post-launch testing
-**Description:** Make the truncated hash display in the Viewer (e.g. `2e528cbe...7110558a`) a clickable link to `explorer.aleph.cloud` so users can inspect the storage message on-chain.
-**Priority:** Low
-
-### 2026-02-03 - Mobile Touch Repulsion for Floating Emojis
-**Source:** Code review feedback
-**Description:** Add `touchmove` handler to FloatingEmojis so mobile users can interact with the repulsion effect (currently desktop-only via mousemove).
-**Priority:** Low
+_No open items._
 
 ---
 
@@ -75,5 +47,23 @@ Completed in performance + polish pass. Fade + slide-up (400ms expo-out) on moun
 
 ### 2026-02-03 - Code Splitting for Web3 Libraries ✓
 Completed in performance + polish pass. Split aleph.ts into read/write, manual chunks in Vite. Main chunk: 3,608 KB → 224 KB.
+
+### 2026-02-03 - Hash Link to Aleph Explorer ✓
+Completed. Viewer hash display is now a clickable link to `{ALEPH_GATEWAY}/storage/raw/{hash}`.
+
+### 2026-02-03 - Mobile Touch Repulsion for Floating Emojis ✓
+Completed. Added `touchmove`/`touchend` handlers with `{ passive: true }` to FloatingEmojis.
+
+### 2026-02-03 - Slow Gradient Background Shift ✓
+Completed. `@property --bg-hue` with 120s oklch hue cycling animation. Separate dark mode keyframes. Respects `prefers-reduced-motion`.
+
+### 2026-02-03 - Elaborate Aleph-Focused Inline Comments ✓
+Completed. Expanded comments in `aleph-write.ts`, `aleph.ts`, `Editor.tsx`. Added "How Aleph Storage Works" section to README.
+
+### 2026-02-03 - Solana Wallet Support ✓
+Completed. Added `@solana/wallet-adapter-react` + `@aleph-sdk/solana`. New `aleph-write-sol.ts` signing path. Dual wallet UI in App/Editor.
+
+### 2026-02-03 - My Pasta + Save/Share Separation ✓
+Completed. localStorage-based history per wallet. `PastaHistory` component with view/share/delete. `#my-pasta` route.
 
 </details>
