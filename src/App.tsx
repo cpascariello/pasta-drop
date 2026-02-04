@@ -105,15 +105,26 @@ function App() {
         )}
       </main>
 
-      <footer className="mt-auto pt-8 pb-4 text-xs text-muted-foreground/60 relative z-10">
-        Powered by{' '}
+      <footer className="mt-auto pt-8 pb-4 text-xs text-muted-foreground/60 relative z-10 flex gap-2">
+        <span>
+          Powered by{' '}
+          <a
+            href="https://aleph.cloud"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-muted-foreground"
+          >
+            Aleph Cloud
+          </a>
+        </span>
+        <span>·</span>
         <a
-          href="https://aleph.cloud"
+          href="https://github.com/cpascariello/pasta-drop"
           target="_blank"
           rel="noopener noreferrer"
           className="underline hover:text-muted-foreground"
         >
-          Aleph Cloud
+          GitHub
         </a>
       </footer>
     </div>

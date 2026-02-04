@@ -10,7 +10,7 @@ export const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '';
 const metadata = {
   name: 'Pasta Drop',
   description: 'Your pasta, al dente forever.',
-  url: 'https://pastadrop.example.com',
+  url: 'https://pastadrop.stasho.xyz',
   icons: ['https://avatars.githubusercontent.com/u/37784886'],
 };
 
