@@ -5,9 +5,7 @@ import { defaultWagmiConfig } from '@web3modal/wagmi/react/config';
 import { mainnet } from 'wagmi/chains';
 import { QueryClient } from '@tanstack/react-query';
 
-// Get a project ID from https://cloud.walletconnect.com
-// For demo purposes, use a placeholder - users should replace with their own
-export const projectId = 'YOUR_WALLETCONNECT_PROJECT_ID';
+export const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '';
 
 const metadata = {
   name: 'Pasta Drop',
