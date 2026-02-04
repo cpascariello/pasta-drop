@@ -5,6 +5,7 @@ import { useAccount, useDisconnect } from 'wagmi';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Editor } from '@/components/Editor';
 import { Viewer } from '@/components/Viewer';
+import { PastaHistory } from '@/components/PastaHistory';
 import { FloatingEmojis } from '@/components/FloatingEmojis';
 import { Button } from '@/components/ui/button';
 
@@ -33,6 +34,11 @@ function App() {
     window.location.hash = '';
   };
 
+  // Navigate to a paste from history
+  const handleViewPaste = (pasteHash: string) => {
+    window.location.hash = pasteHash;
+  };
+
   // Ethereum wallet state
   const { address: ethAddress, isConnected: ethConnected } = useAccount();
   const { disconnect: ethDisconnect } = useDisconnect();
@@ -43,12 +49,29 @@ function App() {
 
   const isConnected = ethConnected || solConnected;
 
+  // Determine active wallet for history
+  const activeChain = ethConnected ? 'ETH' : solConnected ? 'SOL' : null;
+  const activeAddress = ethConnected ? ethAddress : solConnected ? solAddress : null;
+
+  // Hash-based routing: #my-pasta = history, #<hash> = viewer, empty = editor
+  const showHistory = hash === 'my-pasta';
+  const showViewer = hash && !showHistory;
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative">
       <FloatingEmojis />
 
       {isConnected && (
         <div className="fixed top-4 right-4 z-20 flex gap-2">
+          {activeChain && activeAddress && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { window.location.hash = 'my-pasta'; }}
+            >
+              My Pasta
+            </Button>
+          )}
           {ethConnected && (
             <Button variant="outline" size="sm" onClick={() => ethDisconnect()}>
               {ethAddress?.slice(0, 6)}...{ethAddress?.slice(-4)}
@@ -70,7 +93,14 @@ function App() {
       </header>
 
       <main className="relative z-10 w-full flex justify-center">
-        {hash ? (
+        {showHistory && activeChain && activeAddress ? (
+          <PastaHistory
+            chain={activeChain}
+            address={activeAddress}
+            onViewPaste={handleViewPaste}
+            onNewPaste={handleNewPaste}
+          />
+        ) : showViewer ? (
           <Viewer hash={hash} onNewPaste={handleNewPaste} />
         ) : (
           <Editor onPasteCreated={handlePasteCreated} />

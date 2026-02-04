@@ -8,6 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { CelebrationBurst } from '@/components/CelebrationBurst';
+import { addToHistory } from '@/services/pasta-history';
 import type { WalletProvider } from '@/services/aleph-write';
 import type { SolanaWallet } from '@/services/aleph-write-sol';
 
@@ -25,7 +26,7 @@ export function Editor({ onPasteCreated }: EditorProps) {
   const mountedRef = useRef(true);
 
   // Ethereum wallet (wagmi)
-  const { isConnected: ethConnected, connector } = useAccount();
+  const { isConnected: ethConnected, address: ethAddress, connector } = useAccount();
   const { open: openEthModal } = useWeb3Modal();
 
   // Solana wallet
@@ -85,6 +86,17 @@ export function Editor({ onPasteCreated }: EditorProps) {
       }
 
       if (!mountedRef.current) return;
+
+      // Save to local history for "My Pasta" view
+      const chain = ethConnected ? 'ETH' : 'SOL';
+      const address = ethConnected ? ethAddress! : solWallet.publicKey!.toBase58();
+      addToHistory(chain, address, {
+        hash,
+        preview: text.slice(0, 80),
+        createdAt: Date.now(),
+        chain: chain as 'ETH' | 'SOL',
+      });
+
       setStatus('A tavola!');
       // Fire celebration burst from button center
       if (buttonRef.current) {
