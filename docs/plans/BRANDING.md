@@ -24,7 +24,7 @@
 | Create button | "Al dente" |
 | Loading state | "Al dente..." |
 | Success state | "A tavola!" |
-| Copy/share button | "Copy link" |
+| Copy/share button | "Share your bolo" |
 | Copied confirmation | "Copied!" |
 
 ### Viewer Page

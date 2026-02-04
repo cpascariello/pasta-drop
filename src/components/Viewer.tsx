@@ -101,7 +101,7 @@ export function Viewer({ hash, onNewPaste }: ViewerProps) {
       </CardContent>
       <CardFooter className="flex gap-2">
         <Button key={bounceKey} variant="outline" onClick={copyLink} className={`flex-1 ${bounceKey > 0 ? 'button-bounce' : ''}`}>
-          {copied ? 'Copied!' : 'Copy link'}
+          {copied ? 'Copied!' : 'Share your bolo'}
         </Button>
         <Button onClick={onNewPaste} className="flex-1">
           Drop another
