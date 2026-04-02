@@ -20,11 +20,10 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-web3': ['wagmi', 'viem', '@web3modal/wagmi', '@tanstack/react-query', 'ethers5', 'buffer'],
-          'vendor-aleph': ['@aleph-sdk/client', '@aleph-sdk/ethereum', '@aleph-sdk/evm', '@aleph-sdk/solana'],
-          'vendor-solana': ['@solana/web3.js', '@solana/wallet-adapter-react', '@solana/wallet-adapter-base'],
-          'vendor-ui': ['react', 'react-dom'],
+        manualChunks(id) {
+          if (id.includes('node_modules/react-dom/') || id.includes('node_modules/react/')) {
+            return 'vendor-ui';
+          }
         },
       },
     },
