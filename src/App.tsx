@@ -135,7 +135,7 @@ function App() {
           GitHub
         </a>
         <span>·</span>
-        <span>v0.1.1</span>
+        <span>v0.1.2</span>
       </footer>
     </div>
   );
