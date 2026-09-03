@@ -33,3 +33,4 @@ yarn-error.log*
 
 # Worktrees
 .worktrees/
+.template-version

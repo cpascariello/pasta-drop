@@ -6,11 +6,15 @@ Technical patterns and decisions.
 
 ## Stack
 
-- **Framework:** Vite + React 18 + TypeScript
-- **Styling:** Tailwind CSS v4 + ShadCN/ui
-- **Wallet:** Reown AppKit + wagmi + viem (unified Ethereum + Solana modal)
-- **Storage:** Aleph SDK (@aleph-sdk/client, @aleph-sdk/ethereum, @aleph-sdk/evm, @aleph-sdk/solana)
-- **Ethereum:** ethers v5 (aliased as `ethers5`)
+| Layer | Technology |
+|-------|------------|
+| Framework | Vite 7 + React 19 |
+| Language | TypeScript 5.9 |
+| Styling | Tailwind CSS v4 (`@theme`) + ShadCN/ui |
+| Wallet | Reown AppKit + wagmi + viem (unified Ethereum + Solana modal) |
+| Storage | Aleph Cloud via `@aleph-sdk/{client,ethereum,evm,solana}`, ethers v5 aliased as `ethers5` |
+| Database | None — localStorage only (per-wallet paste history, explorer metadata cache) |
+| Deployment | Static `dist/` via Stasho (`.github/workflows/stasho-deploy.yml`, push to `main`) |
 
 ---
 
@@ -85,7 +89,7 @@ src/
 ### Code Splitting
 **Date:** 2026-02-03
 **Context:** Monolithic 3.6MB bundle with web3 libraries loaded eagerly
-**Approach:** Three-pronged: (1) Split `aleph.ts` into `aleph-read.ts` (zero heavy deps) and `aleph-write.ts` (Aleph SDK + ethers5). (2) Dynamic `import()` for `createPaste` in Editor.tsx — only loaded when user actually creates a paste. (3) Manual chunks in `vite.config.ts` separating vendor-web3, vendor-aleph, and vendor-ui for independent caching.
+**Approach:** Three-pronged: (1) Split `aleph.ts` into `aleph-read.ts` (zero heavy deps) and `aleph-write.ts` (Aleph SDK + ethers5). (2) Dynamic `import()` for `createPaste` / `createPasteSolana` in Editor.tsx — only loaded when user actually creates a paste. (3) A `vendor-ui` manual chunk (react + react-dom) in `vite.config.ts`; the web3/aleph chunks fall out of the dynamic imports.
 **Key files:** `vite.config.ts`, `src/services/aleph-read.ts`, `src/services/aleph-write.ts`, `src/components/Editor.tsx`
 **Notes:** Main chunk dropped from 3,608 KB → 224 KB. Viewer path never loads Aleph SDK. `type` imports from `aleph-write.ts` are erased at compile time (no runtime cost).
 
@@ -109,3 +113,16 @@ src/
 **Approach:** localStorage-based history keyed by `pasta-history:{chain}:{address}`. After paste creation, Editor saves metadata (hash, preview, timestamp, chain). `PastaHistory` component renders the list with view/share/delete actions. Routed via `#my-pasta` hash.
 **Key files:** `src/services/pasta-history.ts`, `src/components/PastaHistory.tsx`, `src/components/Editor.tsx`, `src/App.tsx`
 **Notes:** Only metadata is stored locally — actual paste content stays on Aleph. "Delete" only removes from local history. Capped at 50 entries per wallet.
+
+---
+
+## Recipes
+
+<!-- Document common operations as step-by-step guides.
+
+Format:
+### Adding a New [Thing]
+1. Step one
+2. Step two
+3. Step three
+-->
