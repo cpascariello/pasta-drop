@@ -1,6 +1,24 @@
 # Backlog
 
-Ideas and scope creep captured for later consideration.
+Ideas and scope creep captured for later consideration, triaged by readiness.
+
+---
+
+## Workstreams
+
+Every entry carries a `**Workstream:**` field naming a row in this registry.
+The sync-up's **Backlog frontier** renders one row per workstream (see
+CLAUDE.md Context Recovery), so the registry is what makes the backlog
+groupable and its dependencies renderable.
+
+A workstream is a **goal, not a category** — name it after the outcome it
+drives toward. Add a row when a brainstorm/feature/phase/wave doesn't fit an
+existing one; retire a row when its goal ships. Items that straddle two
+workstreams get one home: the goal they gate.
+
+| Workstream | Goal |
+|------------|------|
+| Pasta Drop | Keep the paste app shipping on Aleph Cloud: storage reliability, wallet UX, and polish |
 
 ---
 
@@ -11,15 +29,59 @@ Ideas and scope creep captured for later consideration.
 - "We should also..." moments
 - Features identified but deferred
 
+New entries land in one of the three live sections below. When unsure, default
+to **Needs planning** — it's cheaper to demote a too-fuzzy item than to ship a
+half-baked one from **Ready to execute**. As entries get refined or
+deprioritized, move them between sections (Roadmap → Needs planning → Ready to
+execute → Completed).
+
+**Close-out rule:** marking an item DONE requires extracting any open
+follow-ups named in its body (or in a results file it points to) into their
+own live entries first — a DONE heading buries everything under it, and
+sync-up reads status from headings only.
+
 ---
 
-## Open Items
+## Ready to execute
 
-_No open items._
+Scope is clear, no open questions, can be picked up in a single sitting. Small
+to medium size (one PR, one focused session). The "if I have an hour, what can
+I knock out" bucket. Each entry should already encode the answer to "how do I
+do this" — if it doesn't, it belongs in **Needs planning**.
+
+<!-- Items added here when ready for a focused execution session -->
+
+### 2026-09-03 - Fix `react-refresh/only-export-components` lint error in button.tsx
+**Workstream:** Pasta Drop
+**Source:** Identified while shipping the template bootstrap (`npm run lint` red on main)
+**Description:** `src/components/ui/button.tsx:56` exports `buttonVariants` alongside the `Button` component. Move `buttonVariants` to `src/components/ui/button-variants.ts` and import it in `button.tsx`, or add an eslint-disable with justification. Goal: `npm run lint` clean so it can gate ships.
+**Priority:** Medium
 
 ---
 
-## Completed / Rejected
+## Needs planning
+
+Intent is agreed but there are open questions, design choices, or multi-step
+coordination required. Needs a brainstorm or spec before someone can execute.
+Multi-day / multi-PR work. Default landing spot for new entries when the path
+forward isn't obvious yet.
+
+<!-- Items added here when scope is agreed but the approach isn't -->
+
+---
+
+## Roadmap ideations
+
+Forward-looking ideas, possibly tied to a longer-form evolution doc
+(`docs/<topic>-evolution.md`). Not actionable yet; captured so they're not
+lost. Might never ship in current form, or might mature into a **Needs
+planning** entry once the surrounding context lands.
+
+<!-- Items added here when an idea is worth remembering but isn't on deck -->
+
+---
+
+## Completed
 
 <details>
 <summary>Archived items</summary>
